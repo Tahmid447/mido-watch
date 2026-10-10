@@ -19,7 +19,7 @@ Supabase’s security advisor reports no table/RLS/function warnings. It reports
 
 ## Limits and remaining setup
 
-The full hosted workflow was tested using disposable accounts. This does not create the owner’s personal login. The owner must create an account through Supabase Auth, then import V1 from Settings & data (or ask for the preserved seed to be imported after account creation). New browser-only V1 edits are unavailable until the owner exports that browser’s localStorage data.
+The full hosted workflow was tested using disposable accounts, which were removed after validation. The owner subsequently created a confirmed personal Supabase Auth account. The preserved V1 seed was imported through the existing invoker RPC under that account’s authenticated database role: 44 titles added, 0 skipped, 6 seasons and 18 taste signals. Stored ownership, Reacher season statuses/ranks, both watched Paatal Lok seasons, the JP profile region and unverified legacy review flags were checked after import. New browser-only V1 edits remain unavailable until the owner exports that browser’s localStorage data.
 
 No live frontend deployment or custom domain was created. The production build is verified locally; host-specific deployment configuration and a smoke test on the final HTTPS origin remain necessary. The README contains deployment steps. CI performs unit/database/build and logged-out browser checks; authenticated browser checks require dedicated test users and are skipped if those fixtures are absent.
 
