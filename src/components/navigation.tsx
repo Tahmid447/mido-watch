@@ -12,9 +12,9 @@ import {
 const links = [
   ["/", "Tonight", House],
   ["/library", "Library", Library],
-  ["/recommendations", "For you", Sparkles],
+  ["/recommendations", "Picks", Sparkles],
   ["/taste", "Your taste", SlidersHorizontal],
-  ["/settings", "Settings & data", Settings],
+  ["/settings", "Settings", Settings],
 ] as const;
 export function Navigation() {
   const path = usePathname();

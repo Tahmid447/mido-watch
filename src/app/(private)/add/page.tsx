@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { PriorityField } from "@/components/priority-field";
 import { ActionForm } from "@/components/forms";
 import { Field, TextArea, StatusField } from "@/components/fields";
 export default function Add() {
@@ -33,14 +35,7 @@ export default function Add() {
               max={2200}
             />
             <StatusField />
-            <Field
-              label="Priority · 0–100"
-              name="priority"
-              type="number"
-              min={0}
-              max={100}
-              defaultValue={50}
-            />
+            <PriorityField value={50} />
           </div>
           <Field
             label="Genres / taste tags · comma separated"
@@ -49,6 +44,10 @@ export default function Add() {
           />
           <TextArea label="Synopsis · spoiler-free" name="synopsis" />
         </ActionForm>
+        <p className="small" style={{ marginTop: 20 }}>
+          Artwork is looked up when TMDb is connected.{" "}
+          <Link href="/settings/metadata">Review artwork & trailers ↗</Link>
+        </p>
       </section>
     </>
   );

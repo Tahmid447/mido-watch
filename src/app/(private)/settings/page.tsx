@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { profile, session } from "@/lib/data";
 import { ActionForm } from "@/components/forms";
 import { Field } from "@/components/fields";
@@ -13,6 +14,18 @@ export default async function Settings() {
             Account preferences, portable backups, and a careful bridge from V1.
           </p>
         </div>
+      </div>
+      <div className="settings-shortcuts">
+        <Link className="panel" href="/settings/sync">
+          <p className="eyebrow gold">FRIDAY PICKS</p>
+          <h2>Sync with ChatGPT ↗</h2>
+          <p>Export your taste. Preview and import recommendations.</p>
+        </Link>
+        <Link className="panel" href="/settings/metadata">
+          <p className="eyebrow gold">ARTWORK & TRAILERS</p>
+          <h2>Metadata studio ↗</h2>
+          <p>Refresh missing artwork and review uncertain matches.</p>
+        </Link>
       </div>
       <div className="detail-columns">
         <section className="panel">
@@ -78,6 +91,27 @@ export default async function Settings() {
           </p>
         </section>
       </div>
+      <section className="credits">
+        <h2>Credits</h2>
+        <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
+          <img src="/tmdb-logo.svg" width="130" alt="The Movie Database" />
+        </a>
+        <p className="small">
+          This product uses the TMDB API but is not endorsed or certified by
+          TMDB.
+        </p>
+        <p className="small">
+          Streaming provider metadata is powered by{" "}
+          <a
+            href="https://www.justwatch.com/jp"
+            target="_blank"
+            rel="noreferrer"
+          >
+            JustWatch
+          </a>
+          . Availability can change.
+        </p>
+      </section>
     </>
   );
 }

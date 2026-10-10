@@ -12,6 +12,8 @@ test("logged-out pages never expose private records", async ({
   await page.goto("/library");
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByText("Maharaja")).toHaveCount(0);
+  const context = await request.get("/api/export/chatgpt");
+  expect([401, 503]).toContain(context.status());
   const response = await request.get("/api/export");
   expect([401, 503]).toContain(response.status());
   await page.screenshot({ path: "test-results/login.png", fullPage: true });
@@ -73,6 +75,10 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
   const journal = page.locator("section").filter({
     has: page.getByRole("heading", { name: "Watch journal", exact: true }),
   });
+  await journal
+    .locator("summary")
+    .filter({ hasText: "Edit your journal" })
+    .click();
   await journal.getByLabel("Your rating").fill("9");
   await journal
     .getByLabel("Your notes")
@@ -80,6 +86,10 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
   await journal.getByRole("button", { name: "Save changes" }).click();
   await expect(journal.getByRole("status")).toHaveText("Saved.");
   await page.reload();
+  await journal
+    .locator("summary")
+    .filter({ hasText: "Edit your journal" })
+    .click();
   await expect(journal.getByLabel("Your notes")).toHaveValue(
     "E2E personal rating stays separate",
   );
@@ -88,32 +98,28 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
       .locator("summary")
       .filter({ hasText: /Add a recommendation|Edit recommendation/ }),
   });
-  await rec.locator("summary").click();
+  await rec.locator(":scope > summary").click();
   await rec
     .getByLabel("Spoiler-free reason")
     .fill("A compelling investigation");
   await rec.getByLabel("Why it fits your taste").fill("Competent protagonist");
   await rec.getByRole("button", { name: "Save changes" }).click();
   await expect(rec.getByRole("status")).toHaveText("Saved.");
-  const availability = page
-    .locator("details.panel")
-    .filter({
-      has: page
-        .locator("summary")
-        .filter({ hasText: "Add regional availability" }),
-    });
+  const availability = page.locator("details.panel").filter({
+    has: page
+      .locator("summary")
+      .filter({ hasText: "Add regional availability" }),
+  });
   await availability.locator("summary").click();
   await availability.getByLabel("Provider / cinema").fill("E2E provider");
   await availability.getByLabel("Availability type").selectOption("rent");
   await availability.getByRole("button", { name: "Save changes" }).click();
   await expect(availability.getByRole("status")).toHaveText("Saved.");
-  const review = page
-    .locator("details.panel")
-    .filter({
-      has: page
-        .locator("summary")
-        .filter({ hasText: "Add external review evidence" }),
-    });
+  const review = page.locator("details.panel").filter({
+    has: page
+      .locator("summary")
+      .filter({ hasText: "Add external review evidence" }),
+  });
   await review.locator("summary").click();
   await review.getByLabel("Source / reviewer").fill("E2E unverified source");
   await review.getByLabel("Score · as published").fill("7/10");
@@ -125,6 +131,70 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
   });
   await page.goto("/recommendations");
   await expect(page.getByText("Competent protagonist")).toBeVisible();
+  await page.goto("/settings/sync");
+  const pack = {
+    schema_version: 1,
+    generated_at: "2026-10-09T09:00:00Z",
+    recommendations: [
+      {
+        title: `Friday fixture ${testInfo.project.name} ${Date.now()}`,
+        media_type: "movie",
+        priority: 95,
+        reason: "A precise mystery",
+        fit: "Competent protagonist",
+        caveat: "A patient opening",
+        reviews: [],
+        availability: [],
+      },
+    ],
+  };
+  await page
+    .getByLabel("Recommendation Pack JSON", { exact: true })
+    .fill(JSON.stringify(pack));
+  await page.getByRole("button", { name: "Preview changes" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Review your Friday picks" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("New inbox title", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Confirm import" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Imported 1 new inbox titles",
+  );
+  await page.goto(
+    `/library?q=${encodeURIComponent(pack.recommendations[0].title)}`,
+  );
+  await expect(page.locator(".title-card")).toHaveCount(0);
+  await page.goto("/recommendations");
+  const inbox = page.locator(".inbox-card").filter({
+    has: page.getByRole("heading", { name: pack.recommendations[0].title }),
+  });
+  await inbox
+    .getByRole("button", { name: "Add to Interested", exact: true })
+    .click();
+  await expect(inbox).toHaveCount(0);
+  await page.goto(
+    `/library?q=${encodeURIComponent(pack.recommendations[0].title)}`,
+  );
+  await expect(page.locator(".title-card")).toHaveCount(1);
+  await page.goto("/settings/sync");
+  const contextDownload = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Export for ChatGPT" }).click();
+  const contextPath = await (await contextDownload).path();
+  const context = JSON.parse(readFileSync(contextPath!, "utf8"));
+  expect(context.schema_version).toBe(1);
+  expect(
+    context.titles.some(
+      (t: { title: string; rating: number }) =>
+        t.title === "Reacher" && t.rating === 9,
+    ),
+  ).toBe(true);
+  expect(JSON.stringify(context)).not.toContain("user_id");
+  await page.screenshot({
+    path: `test-results/sync-${testInfo.project.name}.png`,
+    fullPage: true,
+  });
   await page.goto("/taste");
   await expect(
     page.getByRole("heading", { name: "Your taste, in focus." }),

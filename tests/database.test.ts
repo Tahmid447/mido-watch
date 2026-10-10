@@ -247,3 +247,392 @@ it("upcoming releases require sourced verification, preferred region and future 
   );
   expect(foreign.rows).toHaveLength(0);
 });
+
+describe("V2.1 private enrichment and Friday packs", () => {
+  it("refreshes metadata while preserving journals, ranked seasons and manual evidence", async () => {
+    const t = (
+      await asUser(A, "select id from public.titles where title='Reacher'")
+    ).rows[0] as { id: string };
+    const before = (
+      await asUser(
+        A,
+        "select to_jsonb(w) as journal from public.watch_entries w where title_id=$1",
+        [t.id],
+      )
+    ).rows;
+    const seasons = (
+      await asUser(
+        A,
+        "select number,status,rating,notes,rank from public.seasons where title_id=$1 order by number",
+        [t.id],
+      )
+    ).rows;
+    await asUser(
+      A,
+      "insert into public.availability(title_id,region,provider,kind,source_url,verified_on) values($1,'JP','Manual subscription','subscription','https://example.com','2026-10-10')",
+      [t.id],
+    );
+    const payload = {
+      metadata: {
+        state: "matched",
+        refreshed_at: "2026-10-10T12:00:00Z",
+        poster_path: "/example.jpg",
+        season_info: [{ number: 1 }, { number: 5 }],
+      },
+      tmdb_id: 108978,
+      region: "JP",
+      reviews: [
+        {
+          source: "TMDb",
+          score: "8/10",
+          score_type: "10-point",
+          vote_count: 100,
+          captured_on: "2026-10-10",
+          source_url: "https://www.themoviedb.org/tv/108978",
+          evidence_key: "tmdb:rating",
+        },
+      ],
+      availability: [
+        {
+          region: "JP",
+          provider: "Provider fixture",
+          kind: "rent",
+          source_url: "https://www.themoviedb.org/tv/108978/watch",
+          evidence_key: "tmdb:JP:1:rent",
+          fetched_at: "2026-10-10T12:00:00Z",
+        },
+      ],
+    };
+    await asUser(A, "select public.apply_title_metadata($1,$2::jsonb)", [
+      t.id,
+      JSON.stringify(payload),
+    ]);
+    await asUser(A, "select public.apply_title_metadata($1,$2::jsonb)", [
+      t.id,
+      JSON.stringify(payload),
+    ]);
+    expect(
+      (
+        await asUser(
+          A,
+          "select to_jsonb(w) as journal from public.watch_entries w where title_id=$1",
+          [t.id],
+        )
+      ).rows,
+    ).toEqual(before);
+    expect(
+      (
+        await asUser(
+          A,
+          "select number,status,rating,notes,rank from public.seasons where title_id=$1 and number<=4 order by number",
+          [t.id],
+        )
+      ).rows,
+    ).toEqual(seasons);
+    expect(
+      (
+        await asUser(
+          A,
+          "select provider,origin from public.availability where title_id=$1 and provider in ('Manual subscription','Provider fixture') order by provider",
+          [t.id],
+        )
+      ).rows,
+    ).toEqual([
+      { provider: "Manual subscription", origin: "manual" },
+      { provider: "Provider fixture", origin: "tmdb" },
+    ]);
+    await expect(
+      asUser(B, "select public.apply_title_metadata($1,$2::jsonb)", [
+        t.id,
+        JSON.stringify(payload),
+      ]),
+    ).rejects.toThrow(/Owned title/);
+  });
+  it("imports into a separate inbox, protects existing history, and is replay-safe", async () => {
+    const t = (
+      await asUser(A, "select id from public.titles where title='Reacher'")
+    ).rows[0] as { id: string };
+    const before = (
+      await asUser(
+        A,
+        "select to_jsonb(w) as journal from public.watch_entries w where title_id=$1",
+        [t.id],
+      )
+    ).rows;
+    const pack = {
+      schema_version: 1,
+      generated_at: "2026-10-09T09:00:00Z",
+      recommendations: [
+        {
+          title: "Reacher",
+          media_type: "series",
+          priority: 95,
+          reason: "Friday reason",
+          target_title_id: t.id,
+          reviews: [],
+          availability: [],
+        },
+        {
+          title: "New Friday fixture",
+          media_type: "movie",
+          priority: 82,
+          reason: "Fresh recommendation",
+          reviews: [
+            {
+              source: "Publication",
+              score: "4/5",
+              score_type: "5-point",
+              verified: true,
+              captured_on: "2026-10-09",
+              source_url: "https://example.com/review",
+            },
+          ],
+          availability: [],
+        },
+      ],
+    };
+    const first = await asUser(
+      A,
+      "select public.import_recommendation_pack($1::jsonb,$2) result",
+      [JSON.stringify(pack), "test-pack"],
+    );
+    expect(first.rows[0]).toEqual({
+      result: { added: 1, refreshed: 2, kept: 0 },
+    });
+    expect(
+      (
+        await asUser(
+          A,
+          "select to_jsonb(w) as journal from public.watch_entries w where title_id=$1",
+          [t.id],
+        )
+      ).rows,
+    ).toEqual(before);
+    const fresh = (
+      await asUser(
+        A,
+        "select t.id,w.in_library from public.titles t join public.watch_entries w on w.title_id=t.id where t.title='New Friday fixture'",
+      )
+    ).rows[0] as { id: string; in_library: boolean };
+    expect(fresh.in_library).toBe(false);
+    expect(
+      JSON.stringify(
+        (
+          await asUser(
+            A,
+            'select public.library_page(\'{"q":"New Friday fixture"}\') as result',
+          )
+        ).rows,
+      ),
+    ).toContain('"total":0');
+    const replay = {
+      ...pack,
+      recommendations: pack.recommendations.map((r, i) =>
+        i === 1 ? { ...r, target_title_id: fresh.id } : r,
+      ),
+    };
+    expect(
+      (
+        await asUser(
+          A,
+          "select public.import_recommendation_pack($1::jsonb,$2) result",
+          [JSON.stringify(replay), "test-pack"],
+        )
+      ).rows[0],
+    ).toEqual({ result: { added: 0, refreshed: 0, kept: 2 } });
+    await asUser(A, "select public.act_on_recommendation($1,'watching')", [
+      fresh.id,
+    ]);
+    expect(
+      (
+        await asUser(
+          A,
+          "select status,in_library from public.watch_entries where title_id=$1",
+          [fresh.id],
+        )
+      ).rows[0],
+    ).toEqual({ status: "watching", in_library: true });
+    await expect(
+      asUser(B, "select public.act_on_recommendation($1,'skip')", [fresh.id]),
+    ).rejects.toThrow(/Owned recommendation/);
+  });
+  it("does not replay an older pack over a newer recommendation", async () => {
+    const t = (
+      await asUser(A, "select id from public.titles where title='Reacher'")
+    ).rows[0] as { id: string };
+    const make = (reason: string) => ({
+      schema_version: 1,
+      generated_at: "2026-10-09T00:30:00+09:00",
+      recommendations: [
+        {
+          title: "Reacher",
+          media_type: "series",
+          priority: 82,
+          reason,
+          target_title_id: t.id,
+        },
+      ],
+    });
+    await asUser(
+      A,
+      "select public.import_recommendation_pack($1::jsonb,'history-A')",
+      [JSON.stringify(make("Earlier Friday"))],
+    );
+    await asUser(
+      A,
+      "select public.import_recommendation_pack($1::jsonb,'history-B')",
+      [JSON.stringify(make("Latest Friday"))],
+    );
+    const replay = await asUser(
+      A,
+      "select public.import_recommendation_pack($1::jsonb,'history-A') as result",
+      [JSON.stringify(make("Earlier Friday"))],
+    );
+    expect(replay.rows[0]).toEqual({
+      result: { added: 0, refreshed: 0, kept: 1 },
+    });
+    expect(
+      (
+        await asUser(
+          A,
+          "select reason,recommended_on::text from public.recommendations where title_id=$1",
+          [t.id],
+        )
+      ).rows[0],
+    ).toEqual({ reason: "Latest Friday", recommended_on: "2026-10-09" });
+  });
+  it("rolls back a pack with an invalid cross-account match and denies anonymous RPC execution", async () => {
+    const t = (await asUser(A, "select id from public.titles limit 1"))
+      .rows[0] as { id: string };
+    const pack = {
+      schema_version: 1,
+      generated_at: "2026-10-09T09:00:00Z",
+      recommendations: [
+        {
+          title: "Rollback Friday",
+          media_type: "movie",
+          priority: 50,
+          reason: "Must roll back",
+        },
+        {
+          title: "Other owner",
+          media_type: "series",
+          priority: 50,
+          reason: "Blocked",
+          target_title_id: t.id,
+        },
+      ],
+    };
+    await expect(
+      asUser(
+        B,
+        "select public.import_recommendation_pack($1::jsonb,'rollback')",
+        [JSON.stringify(pack)],
+      ),
+    ).rejects.toThrow(/Invalid matched title/);
+    expect(
+      (
+        await asUser(
+          B,
+          "select id from public.titles where title='Rollback Friday'",
+        )
+      ).rows,
+    ).toHaveLength(0);
+    await db.exec("set role anon");
+    try {
+      await expect(
+        db.query("select public.import_recommendation_pack('{}','x')"),
+      ).rejects.toThrow(/permission denied/);
+    } finally {
+      await db.exec("reset role");
+    }
+  });
+});
+
+it("round-trips V2.1 artwork, inbox membership, evidence provenance and recommendation history in backups", async () => {
+  const input = titleSchema.parse({
+    title: "V2.1 backup fixture",
+    media_type: "movie",
+    release_year: 2026,
+    metadata: {
+      state: "matched",
+      poster_path: "/poster.jpg",
+      backdrop_path: "/backdrop.jpg",
+      runtime_minutes: 110,
+      trailer: {
+        key: "abcdefghijk",
+        name: "Official trailer",
+        site: "YouTube",
+        official: true,
+      },
+    },
+    watch: { status: "interested", priority: 82, in_library: false },
+    reviews: [
+      {
+        source: "TMDb",
+        score: "8/10",
+        origin: "tmdb",
+        evidence_key: "tmdb:rating",
+        verified: true,
+        captured_on: "2026-10-10",
+        source_url: "https://www.themoviedb.org/movie/1",
+      },
+    ],
+    availability: [
+      {
+        provider: "Fixture provider",
+        region: "JP",
+        kind: "rent",
+        origin: "tmdb",
+        logo_path: "/logo.jpg",
+        fetched_at: "2026-10-10T12:00:00Z",
+        evidence_key: "tmdb:JP:1:rent",
+      },
+    ],
+    recommendation: {
+      recommended_on: "2026-10-09",
+      priority: 82,
+      reason: "Latest",
+      generated_at: "2026-10-09T09:00:00Z",
+      pack_hash: "backup-pack",
+      history: [
+        {
+          generated_at: "2026-10-02T09:00:00Z",
+          pack_hash: "older-pack",
+          reason: "Earlier",
+          fit: "",
+          caveat: "",
+          priority: 75,
+          source: "ChatGPT",
+        },
+      ],
+    },
+  });
+  await imported(A, { version: 2, titles: [input], taste: [] });
+  const backup = (
+    await asUser(
+      A,
+      "select public.title_document(t) as doc from public.titles t where title='V2.1 backup fixture'",
+    )
+  ).rows[0] as { doc: unknown };
+  await imported(B, { version: 2, titles: [backup.doc], taste: [] });
+  const restored = (
+    await asUser(
+      B,
+      "select public.title_document(t) as doc from public.titles t where title='V2.1 backup fixture'",
+    )
+  ).rows[0] as { doc: unknown };
+  const parsed = titleSchema.parse(restored.doc);
+  delete parsed.watch.updated_at;
+  parsed.availability[0].fetched_at = new Date(
+    parsed.availability[0].fetched_at!,
+  )
+    .toISOString()
+    .replace(".000Z", "Z");
+  parsed.recommendation!.generated_at = new Date(
+    parsed.recommendation!.generated_at!,
+  )
+    .toISOString()
+    .replace(".000Z", "Z");
+  expect(parsed).toEqual(input);
+});

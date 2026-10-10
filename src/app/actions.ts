@@ -16,6 +16,9 @@ import {
 } from "@/lib/model";
 import { parseImport } from "@/lib/import";
 import { ingestRecommendation } from "@/lib/recommendations";
+import { formPriority } from "@/lib/priority";
+import { refreshMetadata } from "./bridge-actions";
+import { tmdbConfigured } from "@/lib/tmdb";
 import seed from "@/lib/v1-seed.json";
 export type Result = { error?: string; message?: string };
 const str = (f: FormData, k: string) => String(f.get(k) ?? "");
@@ -59,14 +62,15 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
         status: str(f, "status"),
         rating: num(f, "rating"),
         notes: str(f, "notes"),
-        priority: Number(str(f, "priority")),
+        priority: formPriority(f),
         started_on: nullable(f, "started_on"),
         completed_on: nullable(f, "completed_on"),
         favorite: f.has("favorite"),
       });
+      const { in_library: _membership, ...journal } = value;
       const r = await db
         .from("watch_entries")
-        .update(value)
+        .update(journal)
         .eq("user_id", user.id)
         .eq("title_id", id)
         .eq("updated_at", str(f, "expected_updated_at"))
@@ -81,11 +85,31 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
       check(
         await db
           .from("watch_entries")
-          .update({ status })
+          .update({ status, in_library: true })
           .eq("user_id", user.id)
           .eq("title_id", id)
           .select("title_id")
           .single(),
+      );
+    } else if (action === "favorite") {
+      const value = z.enum(["true", "false"]).parse(str(f, "favorite"));
+      check(
+        await db
+          .from("watch_entries")
+          .update({ favorite: value === "true" })
+          .eq("user_id", user.id)
+          .eq("title_id", id)
+          .select("title_id")
+          .single(),
+      );
+    } else if (action === "inbox") {
+      check(
+        await db.rpc("act_on_recommendation", {
+          p_title_id: id,
+          p_action: z
+            .enum(["interested", "watching", "skip", "dismiss"])
+            .parse(str(f, "inbox_action")),
+        }),
       );
     } else if (action === "season") {
       const value = seasonSchema.parse({
@@ -137,7 +161,7 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
           .filter(Boolean),
         watch: {
           status: str(f, "status"),
-          priority: Number(str(f, "priority")),
+          priority: formPriority(f),
         },
       });
       const r = await db.rpc("import_library", {
@@ -147,15 +171,40 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
       message = z.object({ skipped: z.number() }).parse(r.data).skipped
         ? "This title already exists. Your existing record was kept."
         : "Title added to your library.";
+      if (
+        z.object({ skipped: z.number() }).parse(r.data).skipped === 0 &&
+        tmdbConfigured()
+      ) {
+        const lookup = await db
+          .from("titles")
+          .select("id")
+          .eq("title", title.title)
+          .eq("media_type", title.media_type)
+          .maybeSingle();
+        if (lookup.data) {
+          const request = new FormData();
+          request.set("title_id", lookup.data.id);
+          const enrichment = await refreshMetadata({}, request);
+          message +=
+            " " +
+            (enrichment.error
+              ? "Artwork can be retried in Settings → Metadata."
+              : enrichment.message);
+        }
+      }
     } else if (action === "metadata") {
       const value = titleSchema
-        .omit({
-          watch: true,
-          seasons: true,
-          reviews: true,
-          availability: true,
-          recommendation: true,
-          provider_ids: true,
+        .pick({
+          title: true,
+          original_title: true,
+          media_type: true,
+          country: true,
+          release_year: true,
+          synopsis: true,
+          poster_url: true,
+          imdb_id: true,
+          tmdb_id: true,
+          tags: true,
         })
         .parse({
           title: str(f, "title"),
@@ -183,16 +232,14 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
       );
     } else if (action === "taste") {
       check(
-        await db
-          .from("taste_signals")
-          .upsert({
-            ...tasteSchema.parse({
-              signal: str(f, "signal"),
-              weight: Number(str(f, "weight")),
-              notes: str(f, "notes"),
-            }),
-            user_id: user.id,
+        await db.from("taste_signals").upsert({
+          ...tasteSchema.parse({
+            signal: str(f, "signal"),
+            weight: Number(str(f, "weight")),
+            notes: str(f, "notes"),
           }),
+          user_id: user.id,
+        }),
       );
     } else if (action === "taste-defaults") {
       check(
@@ -203,20 +250,18 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
       );
     } else if (action === "profile") {
       check(
-        await db
-          .from("profiles")
-          .upsert({
-            ...profileSchema.parse({
-              display_name: str(f, "display_name"),
-              region: str(f, "region").toUpperCase(),
-            }),
-            user_id: user.id,
+        await db.from("profiles").upsert({
+          ...profileSchema.parse({
+            display_name: str(f, "display_name"),
+            region: str(f, "region").toUpperCase(),
           }),
+          user_id: user.id,
+        }),
       );
     } else if (action === "recommendation") {
       await ingestRecommendation(db, id, {
         recommended_on: str(f, "recommended_on"),
-        priority: Number(str(f, "priority")),
+        priority: formPriority(f),
         reason: str(f, "reason"),
         fit: str(f, "fit"),
         caveat: str(f, "caveat"),

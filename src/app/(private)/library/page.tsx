@@ -56,11 +56,17 @@ export default async function Library({
           aria-label="Sort titles"
           defaultValue={f.sort ?? "priority"}
         >
-          <option value="priority">Priority</option>
+          <option value="priority">Best picks first</option>
           <option value="title">Title A–Z</option>
           <option value="rating">Personal rating</option>
           <option value="recent">Recently updated</option>
         </select>
+        <div className="filter-buttons">
+          <button className="button primary">Apply filters</button>
+          <Link className="button" href="/library">
+            Reset
+          </Link>
+        </div>
         <details className="advanced">
           <summary>More filters</summary>
           <div className="form-grid">
@@ -91,10 +97,6 @@ export default async function Library({
             ))}
           </div>
         </details>
-        <button className="button primary">Apply filters</button>
-        <Link className="button" href="/library">
-          Reset
-        </Link>
       </form>
       <TitleGrid titles={result.titles} />
       <div className="pagination">

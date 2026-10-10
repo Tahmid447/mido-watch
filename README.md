@@ -1,4 +1,4 @@
-# Mido Watch V2
+# Mido Watch V2.1
 
 A private movie and TV journal built with Next.js App Router, TypeScript, Supabase Auth and PostgreSQL. Dark cinema-inspired dashboard, searchable library, independent season journals, personal ratings, evidence-backed recommendations, editable taste signals, regional availability, and portable JSON backups.
 
@@ -60,7 +60,7 @@ Copy the reported local API URL and publishable/anon key into `.env.local`. Crea
 - Watch journal and season edits use optimistic concurrency checks. A stale form is rejected instead of silently replacing a newer edit. Quick actions update only status. Dates are explicit; clicking “watched” does not invent a completion date.
 - Season status/rating/notes/rank/completion date are independent. Overall series status is manually editable; importing a partly watched series initializes it to “watching.”
 - Recommendation lifecycle (`new`, `accepted`, `dismissed`) is separate from watch status. “Watching,” “watched,” and “skipped” come from the journal rather than a second conflicting state.
-- No external movie API is required. Optional IMDb/TMDb/provider identifiers, poster URLs, original title and tags provide a future metadata adapter boundary.
+- Tracking works without an external API. Configure a server-only TMDb credential for artwork, trailers and provider enrichment.
 
 ### Tables
 
@@ -119,6 +119,40 @@ Deploy this branch to Vercel or another Node-compatible Next.js host:
 
 V1 is not a Next.js public asset and remains available through Git as rollback/reference. This work does not deploy a public frontend or change the default branch automatically.
 
-## V2.1 intentionally deferred
+## Deferred to V2.2
 
-Automatic TMDb enrichment, poster discovery, verified availability/review feeds, automated taste scoring, scheduled ChatGPT sync, episode tracking, passkeys/OAuth, self-service password recovery, destructive restore and field-level backup conflict resolution. Current recommendations and evidence are manually curated. See [safe recommendation ingestion](docs/recommendation-sync.md) for the integration boundary.
+Direct authenticated/scheduled ChatGPT delivery, automated taste scoring, episode-level journals, other licensed critic/review feeds, passkeys/OAuth, self-service password recovery, destructive restore and field-level backup conflict resolution. V2.1 implements TMDb enrichment and the previewed manual recommendation bridge.
+
+## V2.1 — cinematic discovery and the Friday bridge
+
+The existing private catalog now has portrait posters, cinematic backdrops, official YouTube trailer dialogs, source-specific review chips and Japan provider metadata. Personal ratings stay in the watch journal. Priority remains numeric in storage but uses Must Watch / Strong Pick / Worth Watching / Maybe / Low Priority in ordinary screens; numeric overrides live under Advanced priority.
+
+### TMDb configuration
+
+In the ignored `.env.local` (or the host’s server environment), set **one** of:
+
+```dotenv
+TMDB_READ_ACCESS_TOKEN=your-long-api-read-access-token
+# Alternatively, the TMDb v3 API Key:
+TMDB_API_KEY=your-api-key
+```
+
+Obtain either credential from [TMDb Settings → API](https://www.themoviedb.org/settings/api). The read token uses an Authorization header; the alternative key is sent only from the server to TMDb. Never prefix either with NEXT_PUBLIC, commit it, or paste it into a recommendation pack. Requests do not log credential-bearing URLs. Restart the local server after editing the environment; host deployments need the variable in their server environment. Newly added titles attempt enrichment when configured; imported Friday picks can be enriched in the Metadata studio.
+
+Open **Settings → Metadata** to refresh missing titles in batches of six, refresh a selected title, search an alternative name, enter a known TMDb ID, or choose a reviewed candidate. Known IDs are used directly. Search auto-matches only one exact normalized title with independent year or known-territory evidence; competing editions stay in review. Bilingual parenthetical aliases are considered. Network failures record an actionable state and can be retried.
+
+Metadata stores responsive poster/backdrop paths, release date, genres, runtime, language, episode/season information, official trailer identifiers, candidates, errors and refresh time. The transactional refresh only changes external metadata and TMDb-owned evidence. It adds missing season placeholders without changing existing status, notes, ratings or ranks. Manual and ChatGPT evidence survive automated refresh. TMDb provider data is labeled as automated, visibly attributed to JustWatch wherever displayed, and never creates an OTT date. Confirm availability with the linked provider listing.
+
+Only an official YouTube Trailer with a valid video ID creates a Watch Trailer button. The iframe is mounted inside the dialog after opening, uses youtube-nocookie, has autoplay disabled, closes with Escape, stops by unmounting and returns focus to its trigger. Broken or missing artwork gets a readable fallback, including failures before hydration.
+
+### Weekly recommendations
+
+Use **Settings → Sync** to export compact ChatGPT context and preview/import a Recommendation Pack. New picks stay outside the library until accepted; dismissal preserves recommendation history. No personal fields are overwritten during import. See [the complete bridge schema and security contract](docs/recommendation-sync.md).
+
+The additive V2.1 migration keeps all eight existing owner-protected tables and adds JSON metadata, library membership, evidence provenance/uniqueness and recommendation history. Backups remain version 2 and retain the new fields; old V1/V2 imports remain compatible and non-destructive.
+
+### Validation and review
+
+Use Node 24 LTS. Run `npm test`, `npm run typecheck`, `npm run build`, then `npm run test:e2e`. Authenticated browser workflows require the disposable account fixtures described above. Cinematic smoke tests isolate image/player requests while exercising hosted Auth/RLS, dialog lifecycle, responsive image sizes, fallback art, provider attribution and desktop/mobile overflow. Live account screenshots and enrichment results are recorded in the V2.1 completion report; test fixture media is not production evidence.
+
+PR #1 stays draft. No production frontend deployment or merge is authorized by this upgrade.

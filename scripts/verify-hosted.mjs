@@ -55,26 +55,22 @@ assert.ok(titles.length);
 const titleId = titles[0].id;
 assert.ok(
   (
-    await b
-      .from("seasons")
-      .insert({
-        user_id: users[1].id,
-        title_id: titleId,
-        number: 999,
-        status: "watched",
-      })
+    await b.from("seasons").insert({
+      user_id: users[1].id,
+      title_id: titleId,
+      number: 999,
+      status: "watched",
+    })
   ).error,
   "Cross-owner relation must fail",
 );
 assert.ok(
   (
-    await b
-      .from("titles")
-      .insert({
-        user_id: users[0].id,
-        title: "Unauthorized",
-        media_type: "movie",
-      })
+    await b.from("titles").insert({
+      user_id: users[0].id,
+      title: "Unauthorized",
+      media_type: "movie",
+    })
   ).error,
   "Forged ownership must fail",
 );
@@ -100,4 +96,37 @@ assert.equal(exportB.error, null);
 assert.ok(exportB.data.titles.every((t) => !titles.some((a) => a.id === t.id)));
 console.log(
   "Hosted Auth + REST/RLS verified: 8 tables deny anonymous reads and cross-user reads/deletes; forged ownership, reassignment, cross-owner relations, and anonymous RPCs denied.",
+);
+
+for (const [fn, args] of [
+  [
+    "apply_title_metadata",
+    { p_title_id: titleId, payload: { metadata: { state: "matched" } } },
+  ],
+  ["act_on_recommendation", { p_title_id: titleId, p_action: "interested" }],
+  [
+    "import_recommendation_pack",
+    {
+      payload: {
+        schema_version: 1,
+        generated_at: "2026-10-09T09:00:00Z",
+        recommendations: [
+          {
+            title: "Unauthorized matched pack",
+            media_type: "movie",
+            priority: 50,
+            reason: "Denied",
+            target_title_id: titleId,
+          },
+        ],
+      },
+      p_pack_hash: "cross-owner-test",
+    },
+  ],
+]) {
+  assert.ok((await anon.rpc(fn, args)).error, `Anonymous ${fn} must fail`);
+  assert.ok((await b.rpc(fn, args)).error, `Foreign ${fn} must fail`);
+}
+console.log(
+  "V2.1 invoker RPCs deny anonymous and cross-account metadata refresh, inbox actions and pack matching.",
 );

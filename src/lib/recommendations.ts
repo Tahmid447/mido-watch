@@ -8,7 +8,18 @@ export async function ingestRecommendation(
   titleId: string,
   input: unknown,
 ) {
-  const value = recommendationSchema.parse(input);
+  const value = recommendationSchema
+    .pick({
+      recommended_on: true,
+      priority: true,
+      reason: true,
+      fit: true,
+      caveat: true,
+      availability_note: true,
+      source: true,
+      state: true,
+    })
+    .parse(input);
   const {
     data: { user },
     error: authError,

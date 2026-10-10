@@ -1,3 +1,4 @@
+import { PriorityField } from "@/components/priority-field";
 import { ActionForm } from "./forms";
 import { Field, StatusField, RatingField, TextArea } from "./fields";
 import type { Title, Season } from "@/lib/model";
@@ -12,14 +13,7 @@ export function WatchEditor({ t }: { t: Title }) {
       <div className="form-grid">
         <StatusField value={t.watch.status} />
         <RatingField value={t.watch.rating} />
-        <Field
-          label="Priority · 0–100"
-          name="priority"
-          type="number"
-          min={0}
-          max={100}
-          defaultValue={t.watch.priority}
-        />
+        <PriorityField value={t.watch.priority} />
         <Field
           label="Started on"
           name="started_on"
@@ -169,14 +163,7 @@ export function RecommendationEditor({ t }: { t: Title }) {
               r?.recommended_on ?? new Date().toISOString().slice(0, 10)
             }
           />
-          <Field
-            label="Priority · 0–100"
-            name="priority"
-            type="number"
-            min={0}
-            max={100}
-            defaultValue={r?.priority ?? 50}
-          />
+          <PriorityField value={r?.priority ?? 50} />
           <Field
             label="Source"
             name="source"

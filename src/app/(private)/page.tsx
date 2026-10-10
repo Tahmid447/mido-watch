@@ -1,21 +1,33 @@
 import Link from "next/link";
 import { ArrowRight, Film, Bookmark, Check, Play } from "lucide-react";
-import { library, profile, upcoming } from "@/lib/data";
+import { library, profile, upcoming, taste } from "@/lib/data";
 import { TitleGrid } from "@/components/title-card";
+import { Artwork } from "@/components/artwork";
+import { Trailer } from "@/components/trailer";
+import { priorityLabel } from "@/lib/priority";
 export default async function Home() {
-  const [p, all, watching, watched, interested, recommended, releases] =
-    await Promise.all([
-      profile(),
-      library({ limit: "1" }),
-      library({ status: "watching", limit: "3" }),
-      library({ status: "watched", sort: "recent", limit: "3" }),
-      library({ status: "interested", limit: "3" }),
-      library({ recommended: "true", limit: "3" }),
-      upcoming(),
-    ]);
+  const [
+    p,
+    all,
+    watching,
+    watched,
+    interested,
+    recommended,
+    releases,
+    signals,
+  ] = await Promise.all([
+    profile(),
+    library({ limit: "1" }),
+    library({ status: "watching", limit: "4" }),
+    library({ status: "watched", sort: "recent", limit: "4" }),
+    library({ status: "interested", limit: "4" }),
+    library({ recommended: "true", rec_state: "new", limit: "4" }),
+    upcoming(),
+    taste(),
+  ]);
   const feature =
     recommended.titles.find(
-      (t) => !["watched", "skip"].includes(t.watch.status),
+      (t) => !["watched", "skip", "watching"].includes(t.watch.status),
     ) ?? interested.titles[0];
   return (
     <>
@@ -26,50 +38,57 @@ export default async function Home() {
             Make tonight a good one<span className="gold">.</span>
           </h1>
           <p>
-            A few worthy stories, chosen with intention. Welcome back,{" "}
-            {p.display_name}.
+            Welcome back, {p.display_name}. A few stories worth getting lost in.
           </p>
         </div>
-        <span className="edition">THE COLLECTION / VOL. 02</span>
+        <span className="edition">THE COLLECTION / VOL. 02.1</span>
       </div>
-      <section className="feature">
-        <div className="feature-copy">
+      <section className={`cinema-hero ${feature ? "" : "empty-hero"}`}>
+        {feature && (
+          <div className="hero-background">
+            <Artwork
+              path={
+                feature.metadata.backdrop_path || feature.metadata.poster_path
+              }
+              url={feature.poster_url}
+              title={feature.title}
+              backdrop
+              eager
+            />
+          </div>
+        )}
+        <div className="cinema-hero-copy">
           <p className="eyebrow gold">
-            {feature ? "ON YOUR RADAR" : "A NEW CHAPTER"}
+            {feature ? "BEST PICK FOR TONIGHT" : "A NEW CHAPTER"}
           </p>
-          <h2>{feature?.title ?? "Less scrolling.\nBetter watching."}</h2>
+          <h2>{feature?.title ?? "Your next favorite starts here."}</h2>
+          <div className="feature-meta">
+            {feature &&
+              `${feature.media_type} · ${feature.release_year ?? ""} · ${feature.country} · ${priorityLabel(feature.recommendation?.priority ?? feature.watch.priority)}`}
+          </div>
           <p>
             {feature?.recommendation?.reason ||
               feature?.watch.notes ||
-              "Bring your watch history together, keep track of every season, and make room for your next favorite."}
+              feature?.synopsis ||
+              "Bring your watch history together and make room for a great story."}
           </p>
-          {feature ? (
-            <>
-              <div className="feature-meta">
-                {feature.media_type.toUpperCase()} <span>·</span>{" "}
-                {feature.country} <span>·</span> Priority{" "}
-                {feature.watch.priority}
-              </div>
-              <Link href={`/titles/${feature.id}`} className="button primary">
-                <Play size={16} /> Explore this title
+          <div className="hero-actions">
+            {feature ? (
+              <>
+                <Link href={`/titles/${feature.id}`} className="button primary">
+                  <Play size={16} /> Explore this title
+                </Link>
+                <Trailer
+                  trailer={feature.metadata.trailer}
+                  title={feature.title}
+                />
+              </>
+            ) : (
+              <Link href="/settings" className="button primary">
+                Import your V1 collection <ArrowRight size={16} />
               </Link>
-            </>
-          ) : (
-            <Link href="/settings" className="button primary">
-              Import your V1 collection <ArrowRight size={16} />
-            </Link>
-          )}
-        </div>
-        <div className="feature-art" aria-hidden="true">
-          <div className="frame frame-one" />
-          <div className="frame frame-two" />
-          <div className="frame frame-three" />
-          <span>
-            THE NEXT
-            <br />
-            GREAT STORY
-          </span>
-          <small>MIDO / PERSONAL SELECTION</small>
+            )}
+          </div>
         </div>
       </section>
       <div className="stats">
@@ -90,37 +109,75 @@ export default async function Home() {
         })}
       </div>
       {[
-        ["Continue the story", watching.titles, "watching"],
-        ["High on your list", interested.titles, "interested"],
-        ["Recently updated · watched", watched.titles, "watched"],
-      ].map(([heading, titles, status]) => (
-        <section className="section" key={heading as string}>
-          <div className="section-heading">
-            <h2>{heading as string}</h2>
-            <Link href={`/library?status=${status}`}>
-              View all <ArrowRight size={14} />
-            </Link>
-          </div>
-          <TitleGrid titles={titles as typeof watched.titles} />
-        </section>
-      ))}
-      <section className="section panel">
-        <p className="eyebrow gold">COMING INTO VIEW</p>
-        <h2>Upcoming releases</h2>
-        {releases.length ? (
-          releases.map((r, i) => (
-            <p key={i}>
-              <Link href={`/titles/${r.title_id}`}>{r.title}</Link> ·{" "}
-              {r.provider} · {r.region} · {r.event_type}: {r.event_date}
+        {
+          heading: "Continue watching",
+          titles: watching.titles,
+          url: "/library?status=watching",
+        },
+        {
+          heading: "Your strongest unstarted picks",
+          titles: interested.titles,
+          url: "/library?status=interested",
+        },
+        {
+          heading: "New Friday recommendations",
+          titles: recommended.titles,
+          url: "/recommendations",
+        },
+        {
+          heading: "Recently watched",
+          titles: watched.titles,
+          url: "/library?status=watched&sort=recent",
+        },
+      ]
+        .filter((s) => s.titles.length)
+        .map((s) => (
+          <section className="section" key={s.heading}>
+            <div className="section-heading">
+              <h2>{s.heading}</h2>
+              <Link href={s.url}>
+                View all <ArrowRight size={14} />
+              </Link>
+            </div>
+            <TitleGrid titles={s.titles} />
+          </section>
+        ))}
+      <div className="home-notes">
+        <section className="panel">
+          <p className="eyebrow gold">COMING INTO VIEW</p>
+          <h2>Upcoming releases</h2>
+          {releases.length ? (
+            releases.map((r, i) => (
+              <p key={i}>
+                <Link href={`/titles/${r.title_id}`}>{r.title}</Link> ·{" "}
+                {r.provider} · {r.region} · {r.event_type}: {r.event_date}
+              </p>
+            ))
+          ) : (
+            <p className="small">
+              No sourced upcoming dates in {p.region} yet. Your collection will
+              surface them when release evidence is recorded.
             </p>
-          ))
-        ) : (
-          <p>
-            No verified upcoming dates yet. Add regional release evidence on a
-            title’s detail page.
-          </p>
-        )}
-      </section>
+          )}
+        </section>
+        <section className="panel">
+          <p className="eyebrow gold">YOUR SIGNATURE</p>
+          <h2>A taste for good stories.</h2>
+          <div className="taste-snapshot">
+            {signals
+              .filter((s) => s.weight > 0)
+              .slice(0, 6)
+              .map((s) => (
+                <span className="badge" key={s.signal}>
+                  {s.signal}
+                </span>
+              ))}
+          </div>
+          <Link className="small" href="/taste">
+            Refine your taste ↗
+          </Link>
+        </section>
+      </div>
     </>
   );
 }

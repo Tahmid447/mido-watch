@@ -29,6 +29,7 @@ export function filtersFrom(
     "platform",
     "sort",
     "recommended",
+    "rec_state",
   ])
     if (typeof params[key] === "string") out[key] = params[key].slice(0, 200);
   for (const key of ["rating", "priority", "year", "offset", "limit"])

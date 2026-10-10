@@ -107,6 +107,8 @@ export function parseImport(input: unknown, knownSeed = false): Backup {
       if (value && value !== "—")
         current.reviews.push({
           source: source!,
+          origin: "manual",
+          evidence_key: null,
           score: value,
           score_type: source === "IMDb" ? "out of 10" : "percent",
           critic_score: null,

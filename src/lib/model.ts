@@ -23,6 +23,54 @@ const url = z
   .refine((s) => /^https?:\/\//.test(s), "Use an HTTP or HTTPS URL")
   .nullable()
   .default(null);
+const imagePath = z
+  .string()
+  .regex(/^\/[A-Za-z0-9_.-]+$/)
+  .nullable()
+  .default(null);
+export const trailerSchema = z.object({
+  key: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
+  name: z.string().max(300),
+  official: z.literal(true),
+  site: z.literal("YouTube"),
+});
+export const candidateSchema = z.object({
+  id: z.number().int().positive(),
+  title: z.string(),
+  original_title: z.string(),
+  year: z.number().nullable(),
+  countries: z.array(z.string()),
+  poster_path: imagePath,
+  overview: z.string().default(""),
+});
+export const metadataSchema = z.object({
+  state: z
+    .enum(["missing", "matched", "needs-review", "no-result", "error"])
+    .default("missing"),
+  refreshed_at: z.string().nullable().default(null),
+  error: z.string().nullable().default(null),
+  poster_path: imagePath,
+  backdrop_path: imagePath,
+  release_date: z.iso.date().nullable().default(null),
+  genres: z.array(z.string()).default([]),
+  runtime_minutes: z.number().int().nonnegative().nullable().default(null),
+  original_language: z.string().default(""),
+  episode_count: z.number().int().nonnegative().nullable().default(null),
+  season_count: z.number().int().nonnegative().nullable().default(null),
+  trailer: trailerSchema.nullable().default(null),
+  candidates: z.array(candidateSchema).max(20).default([]),
+  season_info: z
+    .array(
+      z.object({
+        number: z.number().int().nonnegative(),
+        name: z.string(),
+        episode_count: z.number().int().nonnegative(),
+        air_date: z.iso.date().nullable(),
+        overview: z.string(),
+      }),
+    )
+    .default([]),
+});
 export const watchSchema = z.object({
   updated_at: z.string().optional(),
   status: z.enum(statuses).default("interested"),
@@ -32,9 +80,10 @@ export const watchSchema = z.object({
   started_on: date,
   completed_on: date,
   favorite: z.boolean().default(false),
+  in_library: z.boolean().default(true),
 });
 export const seasonSchema = watchSchema
-  .omit({ priority: true, favorite: true, started_on: true })
+  .omit({ priority: true, favorite: true, in_library: true, started_on: true })
   .extend({
     number: z.number().int().min(0).max(1000),
     rank: z.number().int().min(1).nullable().default(null),
@@ -42,6 +91,8 @@ export const seasonSchema = watchSchema
 export const reviewSchema = z
   .object({
     source: z.string().min(1).max(200),
+    origin: z.enum(["manual", "tmdb", "chatgpt"]).default("manual"),
+    evidence_key: z.string().nullable().default(null),
     score: nullableText,
     score_type: text.default("source-specific"),
     critic_score: nullableText,
@@ -63,6 +114,10 @@ export const availabilitySchema = z
       .regex(/^[A-Z]{2}$|^ZZ$/)
       .default("JP"),
     provider: z.string().min(1).max(200),
+    origin: z.enum(["manual", "tmdb", "chatgpt"]).default("manual"),
+    logo_path: imagePath,
+    fetched_at: z.string().nullable().default(null),
+    evidence_key: z.string().nullable().default(null),
     kind: z
       .enum(["subscription", "rent", "buy", "theatrical", "unknown"])
       .default("unknown"),
@@ -79,6 +134,22 @@ export const availabilitySchema = z
   );
 export const recommendationSchema = z.object({
   recommended_on: z.iso.date(),
+  generated_at: z.string().nullable().default(null),
+  pack_hash: z.string().nullable().default(null),
+  runtime_or_episode_count: text.default(""),
+  history: z
+    .array(
+      z.object({
+        generated_at: z.string(),
+        pack_hash: z.string().nullable().default(null),
+        reason: text,
+        fit: text,
+        caveat: text,
+        priority: z.number(),
+        source: text,
+      }),
+    )
+    .default([]),
   priority: z.number().min(0).max(100).default(50),
   reason: text,
   fit: text.default(""),
@@ -94,6 +165,7 @@ export const titleSchema = z.object({
   release_year: z.number().int().min(1800).max(2200).nullable().default(null),
   country: z.string().max(100).default(""),
   synopsis: text.default(""),
+  metadata: metadataSchema.default(() => metadataSchema.parse({})),
   poster_url: url,
   imdb_id: z
     .string()

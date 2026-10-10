@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-09T09:00:00+09:00",
+  "recommendations": [
+    {
+      "title": "Replace with your recommendation",
+      "media_type": "movie",
+      "release_year": null,
+      "country": "",
+      "imdb_id": null,
+      "tmdb_id": null,
+      "priority": 82,
+      "reason": "Explain why this deserves a place on this week’s shortlist.",
+      "fit": "Connect the recommendation to recorded taste signals or reactions.",
+      "caveat": "Mention the main possible drawback.",
+      "runtime_or_episode_count": "Only include confirmed information.",
+      "reviews": [],
+      "availability": []
+    }
+  ]
+}

@@ -16,9 +16,13 @@ export type Database = {
     Tables: {
       availability: {
         Row: {
+          evidence_key: string | null
+          fetched_at: string | null
           id: string
           kind: string
+          logo_path: string | null
           notes: string
+          origin: string
           ott_on: string | null
           provider: string
           region: string
@@ -31,9 +35,13 @@ export type Database = {
           verified_on: string | null
         }
         Insert: {
+          evidence_key?: string | null
+          fetched_at?: string | null
           id?: string
           kind?: string
+          logo_path?: string | null
           notes?: string
+          origin?: string
           ott_on?: string | null
           provider: string
           region: string
@@ -46,9 +54,13 @@ export type Database = {
           verified_on?: string | null
         }
         Update: {
+          evidence_key?: string | null
+          fetched_at?: string | null
           id?: string
           kind?: string
+          logo_path?: string | null
           notes?: string
+          origin?: string
           ott_on?: string | null
           provider?: string
           region?: string
@@ -96,9 +108,13 @@ export type Database = {
           availability_note: string
           caveat: string
           fit: string
+          generated_at: string | null
+          history: Json
+          pack_hash: string | null
           priority: number
           reason: string
           recommended_on: string
+          runtime_or_episode_count: string
           source: string
           state: string
           title_id: string
@@ -109,9 +125,13 @@ export type Database = {
           availability_note?: string
           caveat?: string
           fit?: string
+          generated_at?: string | null
+          history?: Json
+          pack_hash?: string | null
           priority?: number
           reason: string
           recommended_on?: string
+          runtime_or_episode_count?: string
           source?: string
           state?: string
           title_id: string
@@ -122,9 +142,13 @@ export type Database = {
           availability_note?: string
           caveat?: string
           fit?: string
+          generated_at?: string | null
+          history?: Json
+          pack_hash?: string | null
           priority?: number
           reason?: string
           recommended_on?: string
+          runtime_or_episode_count?: string
           source?: string
           state?: string
           title_id?: string
@@ -146,8 +170,10 @@ export type Database = {
           audience_score: string | null
           captured_on: string | null
           critic_score: string | null
+          evidence_key: string | null
           id: string
           notes: string
+          origin: string
           score: string | null
           score_type: string
           source: string
@@ -162,8 +188,10 @@ export type Database = {
           audience_score?: string | null
           captured_on?: string | null
           critic_score?: string | null
+          evidence_key?: string | null
           id?: string
           notes?: string
+          origin?: string
           score?: string | null
           score_type?: string
           source: string
@@ -178,8 +206,10 @@ export type Database = {
           audience_score?: string | null
           captured_on?: string | null
           critic_score?: string | null
+          evidence_key?: string | null
           id?: string
           notes?: string
+          origin?: string
           score?: string | null
           score_type?: string
           source?: string
@@ -275,6 +305,7 @@ export type Database = {
           id: string
           imdb_id: string | null
           media_type: string
+          metadata: Json
           original_title: string | null
           poster_url: string | null
           provider_ids: Json
@@ -292,6 +323,7 @@ export type Database = {
           id?: string
           imdb_id?: string | null
           media_type: string
+          metadata?: Json
           original_title?: string | null
           poster_url?: string | null
           provider_ids?: Json
@@ -309,6 +341,7 @@ export type Database = {
           id?: string
           imdb_id?: string | null
           media_type?: string
+          metadata?: Json
           original_title?: string | null
           poster_url?: string | null
           provider_ids?: Json
@@ -326,6 +359,7 @@ export type Database = {
         Row: {
           completed_on: string | null
           favorite: boolean
+          in_library: boolean
           notes: string
           priority: number
           rating: number | null
@@ -338,6 +372,7 @@ export type Database = {
         Insert: {
           completed_on?: string | null
           favorite?: boolean
+          in_library?: boolean
           notes?: string
           priority?: number
           rating?: number | null
@@ -350,6 +385,7 @@ export type Database = {
         Update: {
           completed_on?: string | null
           favorite?: boolean
+          in_library?: boolean
           notes?: string
           priority?: number
           rating?: number | null
@@ -374,8 +410,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      act_on_recommendation: {
+        Args: { p_action: string; p_title_id: string }
+        Returns: undefined
+      }
+      apply_title_metadata: {
+        Args: { p_title_id: string; payload: Json }
+        Returns: undefined
+      }
       export_library: { Args: never; Returns: Json }
       import_library: { Args: { payload: Json }; Returns: Json }
+      import_recommendation_pack: {
+        Args: { p_pack_hash: string; payload: Json }
+        Returns: Json
+      }
       library_page: { Args: { filters?: Json }; Returns: Json }
       title_document: {
         Args: { t: Database["public"]["Tables"]["titles"]["Row"] }
