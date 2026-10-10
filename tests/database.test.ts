@@ -239,7 +239,7 @@ it("upcoming releases require sourced verification, preferred region and future 
     provider: "Test provider",
     region: "JP",
     event_type: "OTT",
-    event_date: "2026-12-01",
+    event_date: new Date("2026-12-01T00:00:00Z"),
   });
   const foreign = await asUser(
     B,
