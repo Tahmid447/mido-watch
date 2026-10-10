@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mido Watch — Personal Movie & Series Tracker</title>
+<style>
+:root{
+  --bg:#0b0d10;--panel:#12151a;--panel2:#181c22;--text:#f4f6f8;--muted:#9ba6b2;
+  --accent:#f5b942;--line:#252b33;--good:#4fd18b;--warn:#ffcd6b;--bad:#ff7a7a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#090b0d,#0d1116 45%,#090b0d);color:var(--text)}
+button,input,select,textarea{font:inherit}
+.shell{max-width:1180px;margin:auto;padding:28px 18px 64px}
+.hero{display:grid;grid-template-columns:1.5fr .7fr;gap:18px;align-items:stretch}
+.card{background:rgba(18,21,26,.95);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+h1{font-size:clamp(34px,5vw,64px);margin:0 0 10px;letter-spacing:-.04em}
+h2{margin:0 0 16px;font-size:22px}
+p{color:var(--muted);line-height:1.55}
+.kicker{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stat b{display:block;font-size:28px}
+.controls{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:10px;margin:18px 0}
+input,select,textarea{width:100%;background:#0c0f13;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#5e6875}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+button{border:1px solid var(--line);background:#161a20;color:var(--text);border-radius:12px;padding:10px 13px;cursor:pointer}
+button:hover{background:#20252d}
+button.primary{background:var(--accent);color:#17120a;border-color:transparent;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.title-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;min-height:250px}
+.title-card h3{margin:4px 0 7px;font-size:20px}
+.meta{font-size:13px;color:var(--muted);margin-bottom:10px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.badge{font-size:12px;padding:5px 8px;border-radius:999px;background:#20252c;border:1px solid #2b323b;color:#d9e0e7}
+.badge.status-watched{background:rgba(79,209,139,.12);color:#8ce5b7;border-color:rgba(79,209,139,.3)}
+.badge.status-interested{background:rgba(245,185,66,.12);color:#ffd981;border-color:rgba(245,185,66,.3)}
+.badge.status-watching{background:rgba(100,164,255,.12);color:#9ec7ff;border-color:rgba(100,164,255,.3)}
+.badge.status-skip{background:rgba(255,122,122,.1);color:#ffadad;border-color:rgba(255,122,122,.25)}
+.review{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:8px 0 12px}
+.review div{background:#0d1014;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:12px;color:var(--muted)}
+.review b{display:block;color:var(--text);font-size:14px;margin-top:2px}
+.note{font-size:13px;color:#c8d0d8;line-height:1.45;flex:1}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px}
+.actions select,.actions button{padding:8px 9px;font-size:13px}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 0 12px}
+.muted{color:var(--muted);font-size:13px}
+.empty{text-align:center;padding:50px 20px;border:1px dashed var(--line);border-radius:18px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:18px;z-index:5}
+.modal.open{display:flex}
+.modal .card{width:min(620px,100%);max-height:90vh;overflow:auto}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+footer{margin-top:28px;color:var(--muted);font-size:12px;text-align:center}
+@media (max-width:850px){
+  .hero,.grid{grid-template-columns:1fr}
+  .controls{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .controls,.form-grid{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <section class="hero">
+    <div class="card">
+      <div class="kicker">Personal watch intelligence</div>
+      <h1>Mido Watch</h1>
+      <p>A lightweight tracker for what you watched, what is worth your time, and what ChatGPT should stop recommending. Everything is saved in your browser with localStorage.</p>
+      <div class="toolbar">
+        <button class="primary" onclick="openAdd()">+ Add title</button>
+        <button onclick="exportData()">Export JSON</button>
+        <button onclick="document.getElementById('importFile').click()">Import JSON</button>
+        <input id="importFile" type="file" accept=".json" hidden onchange="importData(event)" />
+      </div>
+      <div class="muted">Tip: Export JSON before moving devices. This local version does not automatically sync with your ChatGPT automation.</div>
+    </div>
+    <div class="card">
+      <h2>Your tracker</h2>
+      <div class="stats">
+        <div class="stat"><span class="muted">Watched</span><b id="watchedCount">0</b></div>
+        <div class="stat"><span class="muted">Interested</span><b id="interestCount">0</b></div>
+        <div class="stat"><span class="muted">Watching</span><b id="watchingCount">0</b></div>
+        <div class="stat"><span class="muted">Total titles</span><b id="totalCount">0</b></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <input id="search" placeholder="Search titles, notes, country..." oninput="render()" />
+    <select id="statusFilter" onchange="render()">
+      <option value="">All statuses</option>
+      <option value="interested">Interested</option>
+      <option value="watching">Watching</option>
+      <option value="watched">Watched</option>
+      <option value="not-watched">Not watched</option>
+      <option value="skip">Skip</option>
+    </select>
+    <select id="typeFilter" onchange="render()">
+      <option value="">Movies + series</option>
+      <option value="Movie">Movies</option>
+      <option value="Series">Series</option>
+    </select>
+    <select id="sort" onchange="render()">
+      <option value="priority">Sort: priority</option>
+      <option value="title">Sort: title</option>
+      <option value="status">Sort: status</option>
+    </select>
+  </div>
+
+  <div class="section-head">
+    <div>
+      <div class="kicker">Queue + history</div>
+      <h2 style="margin:4px 0 0">Your library</h2>
+    </div>
+    <div class="muted" id="resultCount"></div>
+  </div>
+  <div id="grid" class="grid"></div>
+  <footer>Seeded from your known watch history on 10 Oct 2026. Review scores shown only where they were explicitly verified in the research used to build this version.</footer>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target===this) closeAdd()">
+  <div class="card">
+    <div class="section-head" style="margin-top:0">
+      <div><div class="kicker">New entry</div><h2 style="margin:4px 0 0">Add a title</h2></div>
+      <button onclick="closeAdd()">Close</button>
+    </div>
+    <div class="form-grid">
+      <div><label>Title</label><input id="fTitle"></div>
+      <div><label>Type</label><select id="fType"><option>Movie</option><option>Series</option></select></div>
+      <div><label>Status</label><select id="fStatus"><option value="interested">Interested</option><option value="not-watched">Not watched</option><option value="watching">Watching</option><option value="watched">Watched</option><option value="skip">Skip</option></select></div>
+      <div><label>Country / industry</label><input id="fCountry" placeholder="US, India, Japan..."></div>
+      <div><label>Platform</label><input id="fPlatform" placeholder="Netflix, Prime Video..."></div>
+      <div><label>Personal priority (1–100)</label><input id="fPriority" type="number" min="1" max="100" value="60"></div>
+    </div>
+    <div style="margin-top:10px"><label>Note</label><textarea id="fNote" rows="4" placeholder="Why it interests you, your reaction, etc."></textarea></div>
+    <div style="margin-top:14px"><button class="primary" onclick="addTitle()">Add to Mido Watch</button></div>
+  </div>
+</div>
+
+<script>
+const KEY='mido-watch-v1';
+const seed=[
+  {title:'Money Heist',type:'Series',status:'interested',country:'Spain',platform:'Netflix Japan',priority:96,imdb:'8.2/10',rtCritics:'94%',rtAudience:'81%',note:'Strong fit: strategic heist, police vs mastermind, suspense and cliffhangers. Verified 10 Oct 2026.'},
+  {title:'Reacher — Season 4',type:'Series',status:'interested',country:'US',platform:'Prime Video Japan',priority:95,imdb:'—',rtCritics:'94%',rtAudience:'65%',note:'Next in your Reacher run. Critics are strong, audience response is more mixed. You ranked S2 > S1 > S3.'},
+  {title:'Exit 8 (8番出口)',type:'Movie',status:'interested',country:'Japan',platform:'Prime Video Japan',priority:94,imdb:'—',rtCritics:'91%',rtAudience:'86%',note:'You specifically liked this recommendation: compact high-concept mystery / psychological suspense.'},
+  {title:'Carrie (2026)',type:'Series',status:'interested',country:'US',platform:'Prime Video Japan',priority:92,imdb:'—',rtCritics:'85%',rtAudience:'85%',note:'You are especially interested. Supernatural psychological horror; Mike Flanagan adaptation.'},
+  {title:'The Terminal List',type:'Series',status:'interested',country:'US',platform:'Prime Video',priority:88,imdb:'—',rtCritics:'—',rtAudience:'—',note:'Military conspiracy / revenge. Try Season 1 before Dark Wolf and Season 2.'},
+  {title:'The Terminal List: Dark Wolf',type:'Series',status:'not-watched',country:'US',platform:'Prime Video',priority:84,imdb:'—',rtCritics:'—',rtAudience:'—',note:'Prequel with stronger CIA / espionage emphasis.'},
+  {title:"The Devil's Hour",type:'Series',status:'not-watched',country:'UK',platform:'Prime Video',priority:90,imdb:'—',rtCritics:'—',rtAudience:'—',note:'High-concept unsettling mystery; strong fit for the From / Severance side of your taste.'},
+  {title:'Kohrra',type:'Series',status:'not-watched',country:'India',platform:'Netflix',priority:86,imdb:'—',rtCritics:'—',rtAudience:'—',note:'Patient, mature police investigation with strong character writing.'},
+  {title:'Black Doves',type:'Series',status:'not-watched',country:'UK',platform:'Netflix',priority:83,imdb:'—',rtCritics:'—',rtAudience:'—',note:'Espionage and covert identities; stylish rather than Reacher-like.'},
+  {title:'Stolen',type:'Movie',status:'not-watched',country:'India',platform:'Check Japan availability',priority:82,imdb:'—',rtCritics:'—',rtAudience:'—',note:'Compact Indian thriller from your original screenshot backlog.'},
+  {title:'Train to Busan',type:'Movie',status:'not-watched',country:'South Korea',platform:'Check Japan availability',priority:80,imdb:'—',rtCritics:'—',rtAudience:'—',note:'Older exception: intense suspense + emotion.'},
+  {title:'Neagley',type:'Series',status:'not-watched',country:'US',platform:'Prime Video',priority:81,imdb:'—',rtCritics:'—',rtAudience:'—',note:'Best watched after Reacher Season 4 for clean continuity.'},
+
+  {title:'Reacher — Season 1',type:'Series',status:'watched',country:'US',platform:'Prime Video',priority:0,note:'Your ranking: #2 of the first three seasons.'},
+  {title:'Reacher — Season 2',type:'Series',status:'watched',country:'US',platform:'Prime Video',priority:0,note:'Your favorite Reacher season so far (#1).'},
+  {title:'Reacher — Season 3',type:'Series',status:'watched',country:'US',platform:'Prime Video',priority:0,note:'Finished Oct 2026. Your ranking: #3; noticeably less impressive than S1/S2.'},
+  {title:'Maharaja',type:'Movie',status:'watched',country:'India',platform:'Netflix',priority:0,note:'Watched.'},
+  {title:'Alice in Borderland',type:'Series',status:'watched',country:'Japan',platform:'Netflix',priority:0,note:'Watched.'},
+  {title:'Squid Game',type:'Series',status:'watched',country:'South Korea',platform:'Netflix',priority:0,note:'Watched.'},
+  {title:'Paatal Lok — Seasons 1 & 2',type:'Series',status:'watched',country:'India',platform:'Prime Video',priority:0,note:'Both seasons watched.'},
+  {title:'1122: For a Happy Marriage',type:'Series',status:'watched',country:'Japan',platform:'Prime Video',priority:0,note:'Watched and liked.'},
+  {title:'The Night Agent',type:'Series',status:'watched',country:'US',platform:'Netflix',priority:0,note:'Watched; strong taste reference.'},
+  {title:'The Night Manager (UK)',type:'Series',status:'watched',country:'UK',platform:'',priority:0,note:'Watched.'},
+  {title:'The Night Manager (India)',type:'Series',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Andhadhun',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched; strong taste reference.'},
+  {title:'Drishyam',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched; strong taste reference.'},
+  {title:'Suzhal: The Vortex',type:'Series',status:'watched',country:'India',platform:'Prime Video',priority:0,note:'Watched; strong taste reference.'},
+  {title:'Farzi',type:'Series',status:'watched',country:'India',platform:'Prime Video',priority:0,note:'Watched; strong taste reference.'},
+  {title:'Special OPS',type:'Series',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Aranyak',type:'Series',status:'watched',country:'India',platform:'Netflix',priority:0,note:'Watched.'},
+  {title:'Dhootha',type:'Series',status:'watched',country:'India',platform:'Prime Video',priority:0,note:'Watched.'},
+  {title:'Dahan',type:'Series',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Kantara',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Monica, O My Darling',type:'Movie',status:'watched',country:'India',platform:'Netflix',priority:0,note:'Watched.'},
+  {title:'A Thursday',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Chup',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Freddy',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Jana Gana Mana',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Sardar Udham',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Sita Ramam',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'777 Charlie',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Watched.'},
+  {title:'Panchayat',type:'Series',status:'watched',country:'India',platform:'Prime Video',priority:0,note:'Watched.'},
+  {title:'The Ba***ds of Bollywood',type:'Series',status:'watched',country:'India',platform:'Netflix',priority:0,note:'Watched and strongly enjoyed.'},
+  {title:'Black Warrant',type:'Series',status:'watched',country:'India',platform:'Netflix',priority:0,note:'Marked watched in your list.'},
+  {title:'Adolescence',type:'Series',status:'watched',country:'UK',platform:'Netflix',priority:0,note:'Marked watched in your list.'},
+  {title:'Saiyaara',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Marked watched in your list.'},
+  {title:'Metro... In Dino',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Marked watched in your list.'},
+  {title:'Dhadak 2',type:'Movie',status:'watched',country:'India',platform:'',priority:0,note:'Marked watched in your list.'}
+];
+
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||seed;
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function labelStatus(s){return {'watched':'Watched','interested':'Interested','watching':'Watching','not-watched':'Not watched','skip':'Skip'}[s]||s}
+function render(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const sf=document.getElementById('statusFilter').value;
+  const tf=document.getElementById('typeFilter').value;
+  const sort=document.getElementById('sort').value;
+  let rows=data.filter(x=>{
+    const hay=[x.title,x.country,x.platform,x.note].join(' ').toLowerCase();
+    return (!q||hay.includes(q))&&(!sf||x.status===sf)&&(!tf||x.type===tf)
+  });
+  rows.sort((a,b)=>{
+    if(sort==='title') return a.title.localeCompare(b.title);
+    if(sort==='status') return a.status.localeCompare(b.status)||a.title.localeCompare(b.title);
+    return (b.priority||0)-(a.priority||0)||a.title.localeCompare(b.title)
+  });
+  const grid=document.getElementById('grid');
+  grid.innerHTML=rows.length?'':`<div class="empty">No titles match this filter.</div>`;
+  rows.forEach(x=>{
+    const i=data.indexOf(x);
+    const el=document.createElement('article');el.className='title-card';
+    const review=(x.imdb||x.rtCritics||x.rtAudience)?`
+      <div class="review">
+        <div>IMDb<b>${esc(x.imdb||'—')}</b></div>
+        <div>RT critics<b>${esc(x.rtCritics||'—')}</b></div>
+        <div>RT audience<b>${esc(x.rtAudience||'—')}</b></div>
+      </div>`:'';
+    el.innerHTML=`
+      <div class="badges">
+        <span class="badge status-${esc(x.status)}">${esc(labelStatus(x.status))}</span>
+        <span class="badge">${esc(x.type)}</span>
+        ${x.country?`<span class="badge">${esc(x.country)}</span>`:''}
+      </div>
+      <h3>${esc(x.title)}</h3>
+      <div class="meta">${esc(x.platform||'Platform not set')}${x.priority?` · Priority ${esc(x.priority)}`:''}</div>
+      ${review}
+      <div class="note">${esc(x.note||'')}</div>
+      <div class="actions">
+        <select onchange="setStatus(${i},this.value)">
+          ${['interested','watching','watched','not-watched','skip'].map(s=>`<option value="${s}" ${x.status===s?'selected':''}>${labelStatus(s)}</option>`).join('')}
+        </select>
+        <button onclick="removeTitle(${i})">Remove</button>
+      </div>`;
+    grid.appendChild(el)
+  });
+  document.getElementById('resultCount').textContent=`${rows.length} shown`;
+  document.getElementById('watchedCount').textContent=data.filter(x=>x.status==='watched').length;
+  document.getElementById('interestCount').textContent=data.filter(x=>x.status==='interested').length;
+  document.getElementById('watchingCount').textContent=data.filter(x=>x.status==='watching').length;
+  document.getElementById('totalCount').textContent=data.length;
+}
+function setStatus(i,s){data[i].status=s;save();render()}
+function removeTitle(i){if(confirm(`Remove "${data[i].title}" from this tracker?`)){data.splice(i,1);save();render()}}
+function openAdd(){document.getElementById('modal').classList.add('open')}
+function closeAdd(){document.getElementById('modal').classList.remove('open')}
+function addTitle(){
+  const title=document.getElementById('fTitle').value.trim();
+  if(!title){alert('Please enter a title.');return}
+  data.unshift({
+    title,type:document.getElementById('fType').value,status:document.getElementById('fStatus').value,
+    country:document.getElementById('fCountry').value.trim(),platform:document.getElementById('fPlatform').value.trim(),
+    priority:Number(document.getElementById('fPriority').value)||60,note:document.getElementById('fNote').value.trim()
+  });
+  save();closeAdd();
+  ['fTitle','fCountry','fPlatform','fNote'].forEach(id=>document.getElementById(id).value='');
+  render()
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),titles:data},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mido-watch-data.json';a.click();URL.revokeObjectURL(a.href)
+}
+function importData(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=()=>{
+    try{
+      const parsed=JSON.parse(r.result);
+      const incoming=Array.isArray(parsed)?parsed:parsed.titles;
+      if(!Array.isArray(incoming))throw new Error();
+      data=incoming;save();render();alert('Imported successfully.');
+    }catch{alert('That JSON file is not a valid Mido Watch export.')}
+  };r.readAsText(f);e.target.value=''
+}
+render();
+</script>
+</body>
+</html>
