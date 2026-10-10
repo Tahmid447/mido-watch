@@ -1,4 +1,4 @@
-# Verification — 10 October 2026 (Japan)
+# V2 foundation verification — 10 October 2026 (Japan)
 
 ## Implemented and exercised
 
@@ -24,3 +24,5 @@ The full hosted workflow was tested using disposable accounts, which were remove
 No live frontend deployment or custom domain was created. The production build is verified locally; host-specific deployment configuration and a smoke test on the final HTTPS origin remain necessary. The README contains deployment steps. CI performs unit/database/build and logged-out browser checks; authenticated browser checks require dedicated test users and are skipped if those fixtures are absent.
 
 Chromium mobile emulation is not physical iPhone/Safari testing. No external critic scores, streaming availability or release dates were researched or newly verified; V1 claims remain explicitly unverified. Automated metadata, release feeds and ChatGPT sync remain V2.1 work.
+
+For the subsequent cinematic upgrade, live enrichment and extended validation, see [V2.1 completion and review notes](v2.1-completion.md).
