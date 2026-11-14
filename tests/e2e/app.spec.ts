@@ -217,11 +217,13 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
   await add.getByRole("button", { name: "Save signal" }).click();
   await expect(add.getByRole("status")).toHaveText("Saved.");
   await page.goto("/add");
-  const name = `E2E film ${testInfo.project.name}`;
+  const name = `E2E film ${testInfo.project.name} ${Date.now()}`;
   await page.getByLabel("Title", { exact: true }).fill(name);
   await page.getByRole("button", { name: "Add title", exact: true }).click();
   await expect(page.getByRole("status")).toContainText(
     /Title added|already exists/,
+    // Adding a title can include the server's bounded TMDb lookup/retries.
+    { timeout: 45000 },
   );
   await page.goto("/settings");
   const downloadEvent = page.waitForEvent("download");

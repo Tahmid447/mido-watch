@@ -2,6 +2,8 @@
 
 A private movie and TV journal built with Next.js App Router, TypeScript, Supabase Auth and PostgreSQL. Dark cinema-inspired dashboard, searchable library, independent season journals, personal ratings, evidence-backed recommendations, editable taste signals, regional availability, and portable JSON backups.
 
+**Live application:** [Mido Watch](https://mido-watch-blackchocot2-5016.vercel.app). Sign in with your existing account; the published URL does not require Vercel login. See the [production release record](docs/production-release.md).
+
 The original `Mido Weekend Watchlist.html` is unchanged. `legacy/mido-watch-v1.html` is an identical reference copy. Neither is served by the Next.js app.
 
 ## Run locally
@@ -155,7 +157,7 @@ The additive V2.1 migration keeps all eight existing owner-protected tables and 
 
 Use Node 24 LTS. Run `npm test`, `npm run typecheck`, `npm run build`, then `npm run test:e2e`. Authenticated browser workflows require the disposable account fixtures described above. Cinematic smoke tests isolate image/player requests while exercising hosted Auth/RLS, dialog lifecycle, responsive image sizes, fallback art, provider attribution and desktop/mobile overflow. Live account screenshots and enrichment results are recorded in the V2.1 completion report; test fixture media is not production evidence.
 
-PR #1 stays draft. No production frontend deployment or merge is authorized by this upgrade.
+PR #1 remains draft and unmerged. The current production release is recorded below; Git pushes do not automatically publish this branch.
 
 ## V2.2 — audit, planning and a simpler weekly workflow
 
@@ -188,4 +190,4 @@ npm run test:e2e:isolated
 
 The isolated browser suite runs the real Next.js app at loopback port 3100 against a **test-only** HTTP contract backed by PGlite/PostgreSQL RLS at loopback port 54329. It uses disposable synthetic users and no hosted project. This checks browser → Server Action → PostgreSQL → rendered response, including audit and plan operations. CI runs this suite without secrets. It does **not** replace hosted Supabase Auth/RLS or real HTTPS preview verification. For those, use explicitly disposable accounts on the verified project with `npm run test:e2e` and `node scripts/verify-hosted.mjs`; revoke/remove those fixtures afterward.
 
-See [V2.2 implementation and access status](docs/v2.2-status.md). Do not treat an unconfigured sign-in page as a usable preview. PR #1 remains draft; production deployment and merging require a separate instruction.
+See [V2.2 implementation and verification](docs/v2.2-status.md) and the [production release record](docs/production-release.md). Production publishing was explicitly authorized and completed; PR #1 remains draft and unmerged. Future releases are manual, with no automatic Git deployment connection.
