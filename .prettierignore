@@ -1,0 +1,10 @@
+node_modules
+.next
+legacy
+Mido Weekend Watchlist.html
+package-lock.json
+src/lib/supabase/database.types.ts
+src/lib/v1-seed.json
+/supabase/
+test-results
+.env*

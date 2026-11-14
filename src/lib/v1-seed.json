@@ -1,0 +1,464 @@
+{
+  "version": 1,
+  "titles": [
+    {
+      "title": "Money Heist",
+      "type": "Series",
+      "status": "interested",
+      "country": "Spain",
+      "platform": "Netflix Japan",
+      "priority": 96,
+      "imdb": "8.2/10",
+      "rtCritics": "94%",
+      "rtAudience": "81%",
+      "note": "Strong fit: strategic heist, police vs mastermind, suspense and cliffhangers. Verified 10 Oct 2026."
+    },
+    {
+      "title": "Reacher — Season 4",
+      "type": "Series",
+      "status": "interested",
+      "country": "US",
+      "platform": "Prime Video Japan",
+      "priority": 95,
+      "imdb": "—",
+      "rtCritics": "94%",
+      "rtAudience": "65%",
+      "note": "Next in your Reacher run. Critics are strong, audience response is more mixed. You ranked S2 > S1 > S3."
+    },
+    {
+      "title": "Exit 8 (8番出口)",
+      "type": "Movie",
+      "status": "interested",
+      "country": "Japan",
+      "platform": "Prime Video Japan",
+      "priority": 94,
+      "imdb": "—",
+      "rtCritics": "91%",
+      "rtAudience": "86%",
+      "note": "You specifically liked this recommendation: compact high-concept mystery / psychological suspense."
+    },
+    {
+      "title": "Carrie (2026)",
+      "type": "Series",
+      "status": "interested",
+      "country": "US",
+      "platform": "Prime Video Japan",
+      "priority": 92,
+      "imdb": "—",
+      "rtCritics": "85%",
+      "rtAudience": "85%",
+      "note": "You are especially interested. Supernatural psychological horror; Mike Flanagan adaptation."
+    },
+    {
+      "title": "The Terminal List",
+      "type": "Series",
+      "status": "interested",
+      "country": "US",
+      "platform": "Prime Video",
+      "priority": 88,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "Military conspiracy / revenge. Try Season 1 before Dark Wolf and Season 2."
+    },
+    {
+      "title": "The Terminal List: Dark Wolf",
+      "type": "Series",
+      "status": "not-watched",
+      "country": "US",
+      "platform": "Prime Video",
+      "priority": 84,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "Prequel with stronger CIA / espionage emphasis."
+    },
+    {
+      "title": "The Devil's Hour",
+      "type": "Series",
+      "status": "not-watched",
+      "country": "UK",
+      "platform": "Prime Video",
+      "priority": 90,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "High-concept unsettling mystery; strong fit for the From / Severance side of your taste."
+    },
+    {
+      "title": "Kohrra",
+      "type": "Series",
+      "status": "not-watched",
+      "country": "India",
+      "platform": "Netflix",
+      "priority": 86,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "Patient, mature police investigation with strong character writing."
+    },
+    {
+      "title": "Black Doves",
+      "type": "Series",
+      "status": "not-watched",
+      "country": "UK",
+      "platform": "Netflix",
+      "priority": 83,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "Espionage and covert identities; stylish rather than Reacher-like."
+    },
+    {
+      "title": "Stolen",
+      "type": "Movie",
+      "status": "not-watched",
+      "country": "India",
+      "platform": "Check Japan availability",
+      "priority": 82,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "Compact Indian thriller from your original screenshot backlog."
+    },
+    {
+      "title": "Train to Busan",
+      "type": "Movie",
+      "status": "not-watched",
+      "country": "South Korea",
+      "platform": "Check Japan availability",
+      "priority": 80,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "Older exception: intense suspense + emotion."
+    },
+    {
+      "title": "Neagley",
+      "type": "Series",
+      "status": "not-watched",
+      "country": "US",
+      "platform": "Prime Video",
+      "priority": 81,
+      "imdb": "—",
+      "rtCritics": "—",
+      "rtAudience": "—",
+      "note": "Best watched after Reacher Season 4 for clean continuity."
+    },
+    {
+      "title": "Reacher — Season 1",
+      "type": "Series",
+      "status": "watched",
+      "country": "US",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Your ranking: #2 of the first three seasons."
+    },
+    {
+      "title": "Reacher — Season 2",
+      "type": "Series",
+      "status": "watched",
+      "country": "US",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Your favorite Reacher season so far (#1)."
+    },
+    {
+      "title": "Reacher — Season 3",
+      "type": "Series",
+      "status": "watched",
+      "country": "US",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Finished Oct 2026. Your ranking: #3; noticeably less impressive than S1/S2."
+    },
+    {
+      "title": "Maharaja",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Alice in Borderland",
+      "type": "Series",
+      "status": "watched",
+      "country": "Japan",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Squid Game",
+      "type": "Series",
+      "status": "watched",
+      "country": "South Korea",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Paatal Lok — Seasons 1 & 2",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Both seasons watched."
+    },
+    {
+      "title": "1122: For a Happy Marriage",
+      "type": "Series",
+      "status": "watched",
+      "country": "Japan",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Watched and liked."
+    },
+    {
+      "title": "The Night Agent",
+      "type": "Series",
+      "status": "watched",
+      "country": "US",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Watched; strong taste reference."
+    },
+    {
+      "title": "The Night Manager (UK)",
+      "type": "Series",
+      "status": "watched",
+      "country": "UK",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "The Night Manager (India)",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Andhadhun",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched; strong taste reference."
+    },
+    {
+      "title": "Drishyam",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched; strong taste reference."
+    },
+    {
+      "title": "Suzhal: The Vortex",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Watched; strong taste reference."
+    },
+    {
+      "title": "Farzi",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Watched; strong taste reference."
+    },
+    {
+      "title": "Special OPS",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Aranyak",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Dhootha",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Dahan",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Kantara",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Monica, O My Darling",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "A Thursday",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Chup",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Freddy",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Jana Gana Mana",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Sardar Udham",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Sita Ramam",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "777 Charlie",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "Panchayat",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Prime Video",
+      "priority": 0,
+      "note": "Watched."
+    },
+    {
+      "title": "The Ba***ds of Bollywood",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Watched and strongly enjoyed."
+    },
+    {
+      "title": "Black Warrant",
+      "type": "Series",
+      "status": "watched",
+      "country": "India",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Marked watched in your list."
+    },
+    {
+      "title": "Adolescence",
+      "type": "Series",
+      "status": "watched",
+      "country": "UK",
+      "platform": "Netflix",
+      "priority": 0,
+      "note": "Marked watched in your list."
+    },
+    {
+      "title": "Saiyaara",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Marked watched in your list."
+    },
+    {
+      "title": "Metro... In Dino",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Marked watched in your list."
+    },
+    {
+      "title": "Dhadak 2",
+      "type": "Movie",
+      "status": "watched",
+      "country": "India",
+      "platform": "",
+      "priority": 0,
+      "note": "Marked watched in your list."
+    }
+  ]
+}
