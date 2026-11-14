@@ -174,3 +174,22 @@ it("treats a started independent season as unfinished even when the series journ
       .breakdown,
   ).toContainEqual({ label: "Continue an unfinished story", points: 22 });
 });
+it("uses known regional language when the country has not been entered", () => {
+  const t = make("Regional investigation", {
+    country: "",
+    metadata: { original_language: "ta", runtime_minutes: 105 },
+  });
+  expect(auditMatches(t, "Indian regional")).toBe(true);
+  const pick = rankTonight([t], [{ signal: "Tamil", weight: 5, notes: "" }], {
+    ...options,
+    mood: "Indian thriller",
+  })[0];
+  expect(pick.breakdown).toContainEqual({
+    label: "Your mood tonight",
+    points: 28,
+  });
+  expect(pick.breakdown).toContainEqual({
+    label: "Matching recorded preferences",
+    points: 8,
+  });
+});

@@ -73,6 +73,15 @@ function containsTerm(text: string, term: string) {
     ? new RegExp("\\b" + term + "\\b").test(text)
     : text.includes(term);
 }
+const languageNames: Record<string, string> = {
+  ml: "Malayalam",
+  ta: "Tamil",
+  te: "Telugu",
+  kn: "Kannada",
+  hi: "Hindi",
+  bn: "Bengali",
+  ja: "Japanese",
+};
 // Personal reactions are deliberately excluded from descriptions: a disliked trait is not a genre.
 export function descriptor(t: Title) {
   return [
@@ -80,6 +89,7 @@ export function descriptor(t: Title) {
     t.synopsis,
     t.country,
     t.metadata.original_language,
+    languageNames[t.metadata.original_language],
     ...t.tags,
     ...t.metadata.genres,
     t.recommendation?.reason,

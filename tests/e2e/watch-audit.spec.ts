@@ -32,7 +32,7 @@ test("audit, independent seasons, plan order and friendly sync", async ({
           title: movie,
           media_type: "movie",
           synopsis: "Grounded police investigation",
-          metadata: { runtime_minutes: 105 },
+          metadata: { runtime_minutes: 105, original_language: "ta" },
           watch: {
             status: "watching",
             rating: 8,
@@ -87,6 +87,14 @@ test("audit, independent seasons, plan order and friendly sync", async ({
     .locator(".audit-card")
     .filter({ has: page.getByRole("heading", { name: movie, exact: true }) });
   await expect(movieCard).toBeVisible();
+  const filters = page.getByRole("group", { name: "Watch Audit filters" });
+  await filters
+    .getByRole("button", { name: "Indian regional", exact: true })
+    .click();
+  await expect(movieCard).toBeVisible();
+  await filters
+    .getByRole("button", { name: "Need confirmation", exact: true })
+    .click();
   await movieCard.getByRole("button", { name: "Watched", exact: true }).click();
   await expect(movieCard).toHaveCount(0);
   await page
@@ -281,7 +289,7 @@ test("audit, independent seasons, plan order and friendly sync", async ({
   }
   await page.getByLabel("Available time").selectOption("Under 2 hours");
   await page
-    .getByRole("combobox",{name:"Mood",exact:true})
+    .getByRole("combobox", { name: "Mood", exact: true })
     .selectOption("Police investigation");
   await page.getByLabel("Movie or series?").selectOption("Movie");
   await expect(page.locator(".tonight-picker .cinema-hero")).toBeVisible();
