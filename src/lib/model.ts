@@ -81,6 +81,8 @@ export const watchSchema = z.object({
   completed_on: date,
   favorite: z.boolean().default(false),
   in_library: z.boolean().default(true),
+  confirmation_needed: z.boolean().default(false),
+  confirmed_at: z.string().nullable().default(null),
 });
 export const seasonSchema = watchSchema
   .omit({ priority: true, favorite: true, in_library: true, started_on: true })
@@ -91,6 +93,9 @@ export const seasonSchema = watchSchema
 export const reviewSchema = z
   .object({
     source: z.string().min(1).max(200),
+    category: z
+      .enum(["audience", "critic", "reviewer", "unknown"])
+      .default("unknown"),
     origin: z.enum(["manual", "tmdb", "chatgpt"]).default("manual"),
     evidence_key: z.string().nullable().default(null),
     score: nullableText,
@@ -197,12 +202,37 @@ export const profileSchema = z.object({
     .regex(/^[A-Z]{2}$/)
     .default("JP"),
 });
+export const planItemSchema = z.object({
+  id: z.uuid(),
+  title_id: z.uuid(),
+  season_number: z.number().int().min(0).max(1000).nullable().default(null),
+  week: z.number().int().min(1).max(4).nullable(),
+  position: z.number().int().nonnegative(),
+  is_backup: z.boolean(),
+  status: z.enum(["planned", "started", "completed", "postponed", "removed"]),
+  label: z.string().max(300).default(""),
+  updated_at: z.string(),
+});
+export type PlanItem = z.infer<typeof planItemSchema>;
+export const planBackupSchema = planItemSchema
+  .omit({ id: true, title_id: true, updated_at: true })
+  .extend({
+    title_key: titleSchema.pick({
+      title: true,
+      media_type: true,
+      release_year: true,
+      country: true,
+      tmdb_id: true,
+      imdb_id: true,
+    }),
+  });
 export const backupSchema = z.object({
   version: z.literal(2),
   exportedAt: z.string().optional(),
   titles: z.array(titleSchema).max(10000),
   taste: z.array(tasteSchema).max(200).default([]),
   profile: profileSchema.optional(),
+  plan: z.array(planBackupSchema).max(200).default([]),
 });
 export type Backup = z.infer<typeof backupSchema>;
 export const defaultTaste = [

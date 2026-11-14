@@ -78,6 +78,23 @@ export function Providers({
     </div>
   );
 }
+const reviewGroups = [
+  "Audience ratings",
+  "Professional critic ratings",
+  "Individual reviewer opinions",
+  "Other sourced evidence",
+] as const;
+function reviewGroup(r: Title["reviews"][number]) {
+  if (r.category === "audience") return reviewGroups[0];
+  if (r.category === "critic") return reviewGroups[1];
+  if (r.category === "reviewer") return reviewGroups[2];
+  if (/^(imdb|tmdb)$|rotten tomatoes audience/i.test(r.source))
+    return reviewGroups[0];
+  if (/metacritic|rotten tomatoes critics/i.test(r.source))
+    return reviewGroups[1];
+  if (/filmi indian|youtube|reviewer/i.test(r.source)) return reviewGroups[2];
+  return reviewGroups[3];
+}
 export function Reviews({
   title: t,
   compact = false,
@@ -103,39 +120,52 @@ export function Reviews({
       </div>
     );
   return (
-    <div className="review-grid">
-      {t.reviews.map((r, i) => (
-        <article key={i} className="review-tile">
-          <p className="eyebrow">{r.source}</p>
-          {r.score && <strong className="external-score">{r.score}</strong>}
-          {r.critic_score && (
-            <p>
-              Critics <strong>{r.critic_score}</strong>
-            </p>
-          )}
-          {r.audience_score && (
-            <p>
-              Audience <strong>{r.audience_score}</strong>
-            </p>
-          )}
-          <p className="small">{r.score_type}</p>
-          {r.vote_count !== null && (
-            <p className="small">
-              {r.vote_count.toLocaleString()} votes / reviews
-            </p>
-          )}
-          <p className="small">
-            {r.verified ? "Verified evidence" : "Unverified evidence"}
-            {r.captured_on && ` · ${r.captured_on}`}
-          </p>
-          {r.source_url && (
-            <a href={r.source_url} target="_blank" rel="noreferrer">
-              View source ↗
-            </a>
-          )}
-          {r.notes && <p className="small">{r.notes}</p>}
-        </article>
-      ))}
+    <div className="review-sections">
+      {reviewGroups
+        .filter((group) => t.reviews.some((r) => reviewGroup(r) === group))
+        .map((group) => (
+          <section className="review-group" key={group}>
+            <h3>{group}</h3>
+            <div className="review-grid">
+              {t.reviews
+                .filter((r) => reviewGroup(r) === group)
+                .map((r, i) => (
+                  <article key={i} className="review-tile">
+                    <p className="eyebrow">{r.source}</p>
+                    {r.score && (
+                      <strong className="external-score">{r.score}</strong>
+                    )}
+                    {r.critic_score && (
+                      <p>
+                        Critics <strong>{r.critic_score}</strong>
+                      </p>
+                    )}
+                    {r.audience_score && (
+                      <p>
+                        Audience <strong>{r.audience_score}</strong>
+                      </p>
+                    )}
+                    <p className="small">{r.score_type}</p>
+                    {r.vote_count !== null && (
+                      <p className="small">
+                        {r.vote_count.toLocaleString()} votes / reviews
+                      </p>
+                    )}
+                    <p className="small">
+                      {r.verified ? "Verified evidence" : "Unverified evidence"}
+                      {r.captured_on && ` · ${r.captured_on}`}
+                    </p>
+                    {r.source_url && (
+                      <a href={r.source_url} target="_blank" rel="noreferrer">
+                        View source ↗
+                      </a>
+                    )}
+                    {r.notes && <p className="small">{r.notes}</p>}
+                  </article>
+                ))}
+            </div>
+          </section>
+        ))}
     </div>
   );
 }

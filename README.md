@@ -1,4 +1,4 @@
-# Mido Watch V2.1
+# Mido Watch V2.2
 
 A private movie and TV journal built with Next.js App Router, TypeScript, Supabase Auth and PostgreSQL. Dark cinema-inspired dashboard, searchable library, independent season journals, personal ratings, evidence-backed recommendations, editable taste signals, regional availability, and portable JSON backups.
 
@@ -15,9 +15,9 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. This checkout already has an ignored `.env.local` configured for the dedicated Mido Watch project. A clean checkout needs its own environment file. Never put a service-role or secret key in either environment variable.
+Open http://localhost:3000. A clean or restored checkout needs its own ignored environment file; verify the required values before starting. Never put a service-role or secret key in either environment variable.
 
-The provisioned backend is **Mido Watch**, project `asvljelxbdkcuohepwgx`, Tokyo (`ap-northeast-1`), in the Tahmid organization. The three version-controlled migrations have been applied there. Existing unrelated projects were not modified.
+The provisioned backend is **Mido Watch**, project `asvljelxbdkcuohepwgx`, Tokyo (`ap-northeast-1`), in the Tahmid organization. The five V2/V2.1 migrations were last verified there on 10 October 2026; confirm the live migration ledger before applying later changes. Existing unrelated projects were not modified.
 
 ## Authentication and first import
 
@@ -56,7 +56,7 @@ Copy the reported local API URL and publishable/anon key into `.env.local`. Crea
 - `src/lib/data.ts` is the authenticated data-access boundary. `getUser()` checks identity; Supabase SSR refreshes cookies in `src/proxy.ts`. Every mutation authenticates again and validates with Zod. Next.js checks Server Action origins for CSRF.
 - Generated database types plus runtime schemas cover SQL and application boundaries. Public environment configuration contains only the publishable key. No privileged backend credential is needed by the application.
 - Metadata is a **private per-user catalog** in V2. This prevents another account from learning what is in your library. Title metadata and personal watch state are separate tables; a shared public metadata cache could be added later without changing user-owned journals.
-- Composite `(user_id, title_id)` foreign keys prevent attaching one account’s notes, seasons, reviews or recommendations to another’s title. RLS covers all eight tables. All RPCs use `SECURITY INVOKER`.
+- Composite `(user_id, title_id)` foreign keys prevent attaching one account’s notes, seasons, reviews or recommendations to another’s title. RLS covers the eight original tables plus the private plan table after the V2.2 migration. All RPCs use `SECURITY INVOKER`.
 - Watch journal and season edits use optimistic concurrency checks. A stale form is rejected instead of silently replacing a newer edit. Quick actions update only status. Dates are explicit; clicking “watched” does not invent a completion date.
 - Season status/rating/notes/rank/completion date are independent. Overall series status is manually editable; importing a partly watched series initializes it to “watching.”
 - Recommendation lifecycle (`new`, `accepted`, `dismissed`) is separate from watch status. “Watching,” “watched,” and “skipped” come from the journal rather than a second conflicting state.
@@ -119,7 +119,7 @@ Deploy this branch to Vercel or another Node-compatible Next.js host:
 
 V1 is not a Next.js public asset and remains available through Git as rollback/reference. This work does not deploy a public frontend or change the default branch automatically.
 
-## Deferred to V2.2
+## Deferred beyond V2.2
 
 Direct authenticated/scheduled ChatGPT delivery, automated taste scoring, episode-level journals, other licensed critic/review feeds, passkeys/OAuth, self-service password recovery, destructive restore and field-level backup conflict resolution. V2.1 implements TMDb enrichment and the previewed manual recommendation bridge.
 
@@ -156,3 +156,36 @@ The additive V2.1 migration keeps all eight existing owner-protected tables and 
 Use Node 24 LTS. Run `npm test`, `npm run typecheck`, `npm run build`, then `npm run test:e2e`. Authenticated browser workflows require the disposable account fixtures described above. Cinematic smoke tests isolate image/player requests while exercising hosted Auth/RLS, dialog lifecycle, responsive image sizes, fallback art, provider attribution and desktop/mobile overflow. Live account screenshots and enrichment results are recorded in the V2.1 completion report; test fixture media is not production evidence.
 
 PR #1 stays draft. No production frontend deployment or merge is authorized by this upgrade.
+
+## V2.2 — audit, planning and a simpler weekly workflow
+
+Open **Watch Audit** to filter your collection by confirmation, priority, watch status and themes. Its poster cards show your rating separately from external evidence, available runtime/episode information, recommendation context, caveats, providers and official trailers. Expand a series for independent season controls. **Unsure keeps the saved status and flags it for review**; it never turns a completed title into an unwatched one. Explicit confirmations are protected against stale forms.
+
+**My 30-Day Plan** groups private plan items into four weeks with backups and postponed items. Move up/down across week slots, start or complete a title/selected season, postpone, remove from the plan without deleting watch history, reschedule, or replace with an owned recommendation. Plan and journal updates commit atomically. Personal plans are stored under owner RLS and are never seeded in a public migration.
+
+**What should I watch tonight?** uses transparent weighted rules: current unfinished titles/seasons, time, movie/series preference, mood, intensity, stored positive/negative signals and sourced regional availability. Watched/skipped/dismissed entries are excluded. Known runtime outside the time window is excluded; unknown runtimes/availability produce caveats. Disliked traits are penalized only when present in recorded descriptions/caveats/evidence. Horror needs a described mystery/investigation, coherent rules or substantial verified community-rating evidence. The rules cannot independently judge plot realism; the explanation exposes their limits and contributions. Newness is not a ranking factor.
+
+**Settings → Sync** defaults to Copy Context, download, Watch Audit and adding a title. A file-based shortlist wizard is optional; raw JSON and full backup tools live under collapsed Advanced. Context and version-2 backups retain confirmation flags and plan state without exporting authentication data. External review groups distinguish audience, professional critics and individual reviewer opinions. A named reviewer can be entered with a verified source/video URL, date and short summary; no opinions are fabricated.
+
+### Private owner updates
+
+Keep any owner history/taste/plan input in an ignored `.env.*` file. The offline helper validates the expected project and creates restricted private SQL without executing it:
+
+```sh
+node scripts/prepare-private-audit.ts .env.owner-update.json EXPECTED_PROJECT_REF
+```
+
+Before applying: verify project and owner account, capture an ignored private backup, inspect existing stronger records, then apply only through the authenticated management connection. The generated transaction appends reactions, preserves unrelated notes/ratings/ranks/dates, never downgrades an existing watched verdict from an uncertain list, leaves ambiguous identities unresolved, and avoids replacing an existing plan. Explicit metadata edition choices require a separate sourced TMDb refresh. Do not commit either the input or generated SQL. The helper is not a public ingestion endpoint.
+
+### Repeatable verification without hosted credentials
+
+```sh
+npm test
+npm run typecheck
+npm run build
+npm run test:e2e:isolated
+```
+
+The isolated browser suite runs the real Next.js app at loopback port 3100 against a **test-only** HTTP contract backed by PGlite/PostgreSQL RLS at loopback port 54329. It uses disposable synthetic users and no hosted project. This checks browser → Server Action → PostgreSQL → rendered response, including audit and plan operations. CI runs this suite without secrets. It does **not** replace hosted Supabase Auth/RLS or real HTTPS preview verification. For those, use explicitly disposable accounts on the verified project with `npm run test:e2e` and `node scripts/verify-hosted.mjs`; revoke/remove those fixtures afterward.
+
+See [V2.2 implementation and access status](docs/v2.2-status.md). Do not treat an unconfigured sign-in page as a usable preview. PR #1 remains draft; production deployment and merging require a separate instruction.

@@ -2189,3 +2189,511 @@ body {
   gap: 10px;
   align-items: center;
 }
+/* V2.2: focused audit, planning and tonight controls within the existing cinema palette. */
+.home-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.audit-toolbar {
+  margin: 24px 0;
+}
+.audit-toolbar > .field {
+  max-width: 440px;
+}
+.filter-chips {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding: 3px 2px 13px;
+  max-width: 100%;
+  scrollbar-width: thin;
+}
+.filter-chips button {
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  padding: 9px 15px;
+  min-height: 44px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 12px;
+}
+.filter-chips button[aria-pressed="true"] {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: #302b22;
+}
+.audit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.audit-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px;
+  background: var(--surface);
+  min-width: 0;
+}
+.audit-card-top {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+  gap: 20px;
+}
+.audit-poster {
+  display: block;
+  border-radius: 6px;
+  overflow: hidden;
+  align-self: start;
+}
+.audit-copy h2 {
+  font-size: 24px;
+  margin: 0 0 9px;
+  overflow-wrap: anywhere;
+}
+.audit-copy > .eyebrow {
+  font-size: 9px;
+  margin-bottom: 8px;
+}
+.audit-facts {
+  font-size: 11px;
+  color: var(--muted);
+}
+.audit-copy .detail-badges {
+  gap: 6px;
+}
+.audit-copy .badge {
+  font-size: 9px;
+  margin: 0;
+}
+.audit-reason {
+  font-size: 12px;
+  margin: 10px 0;
+}
+.audit-copy .small {
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+.audit-copy .hero-actions {
+  margin-top: 14px;
+}
+.audit-copy .hero-actions .button {
+  font-size: 11px;
+  padding: 9px 12px;
+}
+.audit-note {
+  font-size: 11px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.audit-controls {
+  margin-top: 18px;
+}
+.audit-controls fieldset,
+.plan-controls fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+.audit-controls button,
+.plan-controls button {
+  min-width: 0;
+  min-height: 44px;
+  font-size: 11px;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #44494c;
+  background: #232729;
+  color: var(--text);
+}
+.audit-controls button[aria-pressed="true"] {
+  color: var(--gold);
+  background: #302a21;
+  border-color: #a58a5c;
+}
+.audit-controls > p,
+.plan-controls > p {
+  margin: 10px 0 0;
+}
+.audit-seasons {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding-top: 9px;
+}
+.audit-seasons > summary {
+  font-size: 12px;
+}
+.audit-season {
+  padding: 15px 0;
+  border-top: 1px solid var(--line);
+}
+.audit-season h3 {
+  font-size: 15px;
+  margin: 0;
+}
+.audit-season h3 .small {
+  display: block;
+  margin-top: 6px;
+}
+.audit-season .audit-controls {
+  margin-top: 10px;
+}
+.plan-summary {
+  max-width: 720px;
+  margin: 24px 0 30px;
+}
+.plan-summary strong {
+  font-size: 25px;
+  color: var(--gold);
+}
+.plan-summary span {
+  color: var(--muted);
+}
+.plan-summary progress {
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  margin: 15px 0;
+  background: var(--surface-2);
+  border: 0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.plan-summary progress::-webkit-progress-bar {
+  background: var(--surface-2);
+}
+.plan-summary progress::-webkit-progress-value {
+  background: var(--gold);
+}
+.plan-weeks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+.plan-week {
+  min-width: 0;
+}
+.plan-week > .eyebrow {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.plan-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.plan-card-top {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 13px;
+  margin-bottom: 18px;
+}
+.plan-poster {
+  overflow: hidden;
+  border-radius: 4px;
+  align-self: start;
+}
+.plan-card-top h3 {
+  font-size: 17px;
+  line-height: 1.35;
+  margin: 0 0 7px;
+  overflow-wrap: anywhere;
+}
+.plan-card-top .eyebrow {
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.plan-card-top p {
+  font-size: 10px;
+  margin: 0 0 7px;
+}
+.plan-controls fieldset {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.plan-controls button {
+  font-size: 10px;
+}
+.plan-edit {
+  margin-top: 13px;
+  border-top: 1px solid var(--line);
+}
+.plan-edit summary {
+  font-size: 11px;
+}
+.plan-edit .form {
+  padding: 12px 0;
+}
+.plan-edit .button {
+  width: 100%;
+}
+.plan-extras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.tonight-picker {
+  margin-top: 25px;
+}
+.tonight-picker > .section-heading h2 {
+  font-size: 24px;
+}
+.tonight-picker > .section-heading .eyebrow {
+  margin-bottom: 8px;
+}
+.tonight-filters {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 0.8fr 0.8fr;
+  gap: 14px;
+  margin: 22px 0 5px;
+}
+.tonight-filters .field {
+  font-size: 11px;
+}
+.tonight-caveat {
+  font-size: 11px;
+  margin: 14px 0;
+}
+.tonight-caveat > strong {
+  color: var(--gold);
+  font-size: 10px;
+}
+.tonight-caveat > p {
+  margin: 5px 0;
+  color: #c3c5c5;
+  font-size: 12px;
+}
+.cinema-hero .provider-compact {
+  margin: 15px 0 20px;
+}
+.scoring-explanation {
+  padding: 13px 4px;
+}
+.scoring-explanation summary {
+  font-size: 12px;
+}
+.scoring-explanation p {
+  margin: 6px 0;
+  max-width: 740px;
+}
+.scoring-explanation strong {
+  margin-left: 8px;
+  color: var(--gold);
+}
+.sync-friendly ol {
+  padding-left: 22px;
+  max-width: 770px;
+  color: var(--muted);
+}
+.sync-friendly li {
+  padding: 5px 0 10px;
+}
+.sync-friendly .hero-actions {
+  align-items: start;
+  margin-top: 22px;
+}
+.sync-friendly .hero-actions > div {
+  max-width: 300px;
+}
+.sync-friendly .hero-actions p {
+  margin-top: 10px;
+}
+.sync-wizard[open] > summary,
+.sync-advanced[open] > summary {
+  margin-bottom: 18px;
+}
+.sync-wizard > summary,
+.sync-advanced > summary {
+  font-size: 15px;
+}
+.review-group {
+  margin: 22px 0;
+}
+.review-group h3 {
+  font-size: 14px;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.review-group:first-child {
+  margin-top: 0;
+}
+@media (max-width: 1250px) {
+  .plan-weeks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .audit-grid {
+    grid-template-columns: 1fr;
+  }
+  .audit-card-top {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+}
+@media (max-width: 850px) {
+  .tonight-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .plan-extras {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .audit-card {
+    padding: 20px;
+  }
+}
+@media (max-width: 600px) {
+  .sidebar nav a {
+    font-size: 8px;
+    padding: 7px 2px;
+    min-height: 54px;
+  }
+  .audit-card {
+    padding: 17px;
+  }
+  .audit-card-top {
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 15px;
+  }
+  .audit-copy h2 {
+    font-size: 21px;
+  }
+  .audit-copy .detail-badges {
+    gap: 5px;
+  }
+  .audit-copy .badge {
+    font-size: 8px;
+  }
+  .audit-copy .personal-rating {
+    font-size: 10px;
+  }
+  .audit-copy .hero-actions {
+    margin-left: -95px;
+    padding-top: 12px;
+  }
+  .audit-controls fieldset {
+    gap: 7px;
+  }
+  .audit-controls button {
+    font-size: 10px;
+    padding: 8px 4px;
+  }
+  .audit-copy .hero-actions .button {
+    font-size: 11px;
+  }
+  .audit-copy .small {
+    font-size: 10px;
+  }
+  .audit-copy .audit-reason {
+    font-size: 11px;
+  }
+  .audit-grid {
+    gap: 18px;
+  }
+  .plan-weeks,
+  .plan-extras {
+    grid-template-columns: 1fr;
+  }
+  .plan-week {
+    margin-bottom: 16px;
+  }
+  .plan-card-top {
+    grid-template-columns: 65px minmax(0, 1fr);
+  }
+  .plan-controls fieldset {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tonight-picker > .section-heading {
+    align-items: start;
+  }
+  .tonight-picker > .section-heading h2 {
+    font-size: 21px;
+  }
+  .tonight-picker > .section-heading > a {
+    max-width: 85px;
+    font-size: 10px;
+  }
+  .tonight-filters {
+    gap: 0 10px;
+  }
+  .tonight-filters .field {
+    font-size: 10px;
+  }
+  .tonight-filters select {
+    font-size: 12px;
+  }
+  .sync-friendly .hero-actions {
+    flex-direction: column;
+  }
+  .sync-friendly .hero-actions .button {
+    min-height: 44px;
+  }
+  .filter-chips button {
+    font-size: 11px;
+    padding: 8px 13px;
+  }
+  .home-links .button {
+    font-size: 11px;
+  }
+}
+.wizard-steps {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 12px;
+  padding-left: 18px;
+  margin: 0 0 25px;
+}
+.preview-poster {
+  width: 65px;
+  float: left;
+  margin: 0 18px 12px 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.preview-row:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.plan-poster .art-fallback {
+  padding: 7px;
+}
+.plan-poster .fallback-mark {
+  font-size: 6px;
+  letter-spacing: 0.04em;
+}
+.plan-poster .art-fallback > span:not(.fallback-mark) {
+  font-size: 9px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.plan-poster .art-fallback small {
+  display: none;
+}
+.audit-poster .art-fallback {
+  padding: 10px;
+}
+.audit-poster .art-fallback > span:not(.fallback-mark) {
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.audit-poster .art-fallback small {
+  font-size: 5px;
+}

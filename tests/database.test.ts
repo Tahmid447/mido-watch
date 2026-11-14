@@ -38,11 +38,11 @@ afterAll(async () => {
   await db.close();
 });
 describe("PostgreSQL persistence and ownership", () => {
-  it("enables RLS on all eight user tables", async () => {
+  it("enables RLS on all nine user tables", async () => {
     const r = await db.query<{ relrowsecurity: boolean }>(
       "select relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'",
     );
-    expect(r.rows).toHaveLength(8);
+    expect(r.rows).toHaveLength(9);
     expect(r.rows.every((r) => r.relrowsecurity)).toBe(true);
   });
   it("imports transactionally and deduplicates without overwriting", async () => {
@@ -74,6 +74,7 @@ describe("PostgreSQL persistence and ownership", () => {
       "recommendations",
       "taste_signals",
       "profiles",
+      "plan_items",
     ]) {
       const r = await asUser(B, `select * from public.${table}`);
       expect(r.rows).toHaveLength(0);
@@ -635,4 +636,363 @@ it("round-trips V2.1 artwork, inbox membership, evidence provenance and recommen
     .toISOString()
     .replace(".000Z", "Z");
   expect(parsed).toEqual(input);
+});
+
+describe("V2.2 confirmation and private plans", () => {
+  it("Unsure preserves a verdict, notes, dates and ratings, while a confirmation updates only status", async () => {
+    const t = (
+      await asUser(
+        A,
+        "select id from public.titles where title='V2.1 backup fixture'",
+      )
+    ).rows[0] as { id: string };
+    await asUser(
+      A,
+      "update public.watch_entries set status='watched',rating=8,notes='Personal reaction',completed_on='2026-11-01' where title_id=$1",
+      [t.id],
+    );
+    await asUser(A, "select public.audit_status($1,'unsure')", [t.id]);
+    expect(
+      (
+        await asUser(
+          A,
+          "select status,rating,notes,completed_on::text,confirmation_needed from public.watch_entries where title_id=$1",
+          [t.id],
+        )
+      ).rows[0],
+    ).toEqual({
+      status: "watched",
+      rating: "8",
+      notes: "Personal reaction",
+      completed_on: "2026-11-01",
+      confirmation_needed: true,
+    });
+    const old = (
+      await asUser(
+        A,
+        "select updated_at::text as stamp from public.watch_entries where title_id=$1",
+        [t.id],
+      )
+    ).rows[0] as { stamp: string };
+    await asUser(A, "select public.audit_status($1,'interested')", [t.id]);
+    await expect(
+      asUser(
+        A,
+        "select public.audit_status($1,'watching',null,$2::timestamptz)",
+        [t.id, old.stamp],
+      ),
+    ).rejects.toThrow(/journal changed/);
+    await expect(
+      asUser(B, "select public.audit_status($1,'watched')", [t.id]),
+    ).rejects.toThrow(/Owned title/);
+  });
+  it("keeps independent season confirmations, notes and rankings intact", async () => {
+    const t = (
+      await asUser(A, "select id from public.titles where title='Reacher'")
+    ).rows[0] as { id: string };
+    const before = (
+      await asUser(
+        A,
+        "select number,status,notes,rank from public.seasons where title_id=$1 and number<>4 order by number",
+        [t.id],
+      )
+    ).rows;
+    await asUser(A, "select public.audit_status($1,'unsure',4)", [t.id]);
+    await asUser(A, "select public.audit_status($1,'watching',4)", [t.id]);
+    expect(
+      (
+        await asUser(
+          A,
+          "select number,status,notes,rank from public.seasons where title_id=$1 and number<>4 order by number",
+          [t.id],
+        )
+      ).rows,
+    ).toEqual(before);
+    expect(
+      (
+        await asUser(
+          A,
+          "select confirmation_needed from public.seasons where title_id=$1 and number=4",
+          [t.id],
+        )
+      ).rows[0],
+    ).toEqual({ confirmation_needed: false });
+  });
+  it("orders a plan across weeks atomically and completes only its selected season", async () => {
+    const series = (
+      await asUser(A, "select id from public.titles where title='Reacher'")
+    ).rows[0] as { id: string };
+    const film = (
+      await asUser(
+        A,
+        "select id from public.titles where title='V2.1 backup fixture'",
+      )
+    ).rows[0] as { id: string };
+    await asUser(A, "select public.edit_plan('add',null,$1,4,1)", [series.id]);
+    await asUser(A, "select public.edit_plan('add',null,$1,null,2)", [film.id]);
+    const items = (
+      await asUser(
+        A,
+        "select id,title_id,position,week from public.plan_items order by position",
+      )
+    ).rows as {
+      id: string;
+      title_id: string;
+      position: number;
+      week: number;
+    }[];
+    await asUser(A, "select public.edit_plan('up',$1)", [items[1].id]);
+    expect(
+      (
+        await asUser(
+          A,
+          "select title_id,position,week from public.plan_items order by position",
+        )
+      ).rows,
+    ).toEqual([
+      { title_id: film.id, position: 0, week: 1 },
+      { title_id: series.id, position: 1, week: 2 },
+    ]);
+    const before = (
+      await asUser(
+        A,
+        "select status from public.watch_entries where title_id=$1",
+        [series.id],
+      )
+    ).rows;
+    await asUser(A, "select public.edit_plan('complete',$1)", [items[0].id]);
+    expect(
+      (
+        await asUser(
+          A,
+          "select status from public.watch_entries where title_id=$1",
+          [series.id],
+        )
+      ).rows,
+    ).toEqual(before);
+    expect(
+      (
+        await asUser(
+          A,
+          "select status from public.seasons where title_id=$1 and number=4",
+          [series.id],
+        )
+      ).rows[0],
+    ).toEqual({ status: "watched" });
+    await asUser(A, "select public.edit_plan('postpone',$1)", [items[1].id]);
+    expect(
+      (
+        await asUser(A, "select status from public.plan_items where id=$1", [
+          items[1].id,
+        ])
+      ).rows[0],
+    ).toEqual({ status: "postponed" });
+    await expect(
+      asUser(B, "select public.edit_plan('complete',$1)", [items[0].id]),
+    ).rejects.toThrow(/not found/);
+    await expect(
+      asUser(B, "select public.edit_plan('add',null,$1,null,1)", [film.id]),
+    ).rejects.toThrow(/your collection/);
+  });
+  it("backs up plans by title identity and preserves an existing plan on reimport", async () => {
+    const exported = (await asUser(A, "select public.export_library() as doc"))
+      .rows[0] as { doc: { plan: { title_key: unknown }[] } };
+    expect(exported.doc.plan).toHaveLength(2);
+    expect(exported.doc.plan[0]).not.toHaveProperty("user_id");
+    expect(exported.doc.plan[0]).not.toHaveProperty("title_id");
+    const existing = (
+      await asUser(
+        A,
+        "select to_jsonb(p) as p from public.plan_items p order by position",
+      )
+    ).rows;
+    await imported(A, exported.doc);
+    expect(
+      (
+        await asUser(
+          A,
+          "select to_jsonb(p) as p from public.plan_items p order by position",
+        )
+      ).rows,
+    ).toEqual(existing);
+    await imported(B, exported.doc);
+    expect(
+      (await asUser(B, "select count(*)::int as n from public.plan_items"))
+        .rows[0],
+    ).toEqual({ n: 2 });
+  });
+  it("protects plan/audit RPCs from anonymous execution and retains audit flags through metadata refresh", async () => {
+    const t = (
+      await asUser(A, "select id from public.titles where title='Reacher'")
+    ).rows[0] as { id: string };
+    await asUser(A, "select public.audit_status($1,'unsure')", [t.id]);
+    const before = (
+      await asUser(
+        A,
+        "select to_jsonb(w) as w from public.watch_entries w where title_id=$1",
+        [t.id],
+      )
+    ).rows;
+    await asUser(
+      A,
+      'select public.apply_title_metadata($1,\'{"metadata":{"state":"matched"}}\')',
+      [t.id],
+    );
+    expect(
+      (
+        await asUser(
+          A,
+          "select to_jsonb(w) as w from public.watch_entries w where title_id=$1",
+          [t.id],
+        )
+      ).rows,
+    ).toEqual(before);
+    await db.exec("set role anon");
+    try {
+      await expect(db.query("select public.edit_plan('up')")).rejects.toThrow(
+        /permission denied/,
+      );
+      await expect(
+        db.query("select public.audit_status($1,'watched')", [t.id]),
+      ).rejects.toThrow(/permission denied/);
+    } finally {
+      await db.exec("reset role");
+    }
+  });
+});
+
+it("merges a private audit conservatively without leaking it into code or resetting a plan", async () => {
+  const { buildPrivateAuditSql } = await import("../src/lib/private-audit");
+  const input = {
+    schema_version: 1,
+    project_ref: "abcdefghijklmnopqrst",
+    owner_id: A,
+    source_date: "2026-11-14",
+    updates: [
+      {
+        title: "Private synthetic series",
+        media_type: "series",
+        status: "watched",
+        confirmed: true,
+        reaction: "A note with a quote ' and $private_audit$ delimiter",
+        seasons: [
+          { number: 1, status: "watched", confirmed: true, rating: 7, rank: 1 },
+        ],
+      },
+      {
+        title: "Unresolved synthetic item",
+        media_type: null,
+        identity_review: true,
+        status: "watched",
+        confirmed: true,
+      },
+    ],
+    taste: [
+      { signal: "Synthetic preference", weight: -5, notes: "Private fixture" },
+    ],
+    plan: [],
+  };
+  await db.exec(buildPrivateAuditSql(input, "abcdefghijklmnopqrst"));
+  await db.exec(
+    buildPrivateAuditSql(
+      {
+        ...input,
+        updates: [
+          {
+            title: "Private synthetic series",
+            media_type: "series",
+            confirmation_needed: true,
+            seasons: [{ number: 1, confirmation_needed: true }],
+          },
+        ],
+      },
+      "abcdefghijklmnopqrst",
+    ),
+  );
+  expect(
+    (
+      await asUser(
+        A,
+        "select w.status,w.notes,w.confirmation_needed from public.watch_entries w join public.titles t on t.id=w.title_id where t.title='Private synthetic series'",
+      )
+    ).rows[0],
+  ).toMatchObject({
+    status: "watched",
+    confirmation_needed: true,
+    notes: input.updates[0].reaction,
+  });
+  expect(
+    (
+      await asUser(
+        A,
+        "select s.status,s.rating,s.rank from public.seasons s join public.titles t on t.id=s.title_id where t.title='Private synthetic series'",
+      )
+    ).rows[0],
+  ).toEqual({ status: "watched", rating: "7", rank: 1 });
+  expect(
+    (
+      await asUser(
+        A,
+        "select id from public.titles where title='Unresolved synthetic item'",
+      )
+    ).rows,
+  ).toHaveLength(0);
+  expect(() => buildPrivateAuditSql(input, "wrongproject")).toThrow(
+    /Project does not match/,
+  );
+  const followup = {
+    ...input,
+    updates: [
+      {
+        title: "Private synthetic series",
+        media_type: "series",
+        reaction: "A separate later reaction",
+      },
+    ],
+  };
+  await db.exec(buildPrivateAuditSql(followup, "abcdefghijklmnopqrst"));
+  await db.exec(buildPrivateAuditSql(followup, "abcdefghijklmnopqrst"));
+  expect(
+    (
+      await asUser(
+        A,
+        "select w.notes from public.watch_entries w join public.titles t on t.id=w.title_id where t.title='Private synthetic series'",
+      )
+    ).rows[0],
+  ).toEqual({
+    notes: `${input.updates[0].reaction}\n\nA separate later reaction`,
+  });
+  expect(
+    (
+      await asUser(
+        B,
+        "select id from public.titles where title='Private synthetic series'",
+      )
+    ).rows,
+  ).toHaveLength(0);
+});
+
+it("keeps populated plans isolated and rejects cross-owner plan relationships", async () => {
+  expect(
+    (await asUser(B, `select id from public.plan_items where user_id='${A}'`))
+      .rows,
+  ).toHaveLength(0);
+  expect(
+    (
+      await asUser(
+        B,
+        `update public.plan_items set label='intrusion' where user_id='${A}' returning id`,
+      )
+    ).rows,
+  ).toHaveLength(0);
+  const foreign = (
+    await asUser(A, "select title_id from public.plan_items limit 1")
+  ).rows[0] as { title_id: string };
+  await expect(
+    asUser(
+      B,
+      "insert into public.plan_items(title_id,position,week) values($1,99,1)",
+      [foreign.title_id],
+    ),
+  ).rejects.toThrow(/foreign key/);
 });

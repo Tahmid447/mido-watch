@@ -59,6 +59,8 @@ export type PackMatch = {
     title: string;
     year: number | null;
     country: string;
+    poster_path: string | null;
+    poster_url: string | null;
   }[];
   explanation: string;
 };
@@ -111,6 +113,8 @@ export function matchPack(
         title: t.title,
         year: t.release_year,
         country: t.country,
+        poster_path: t.metadata.poster_path,
+        poster_url: t.poster_url,
       })),
       explanation: match
         ? byId.length
@@ -128,6 +132,16 @@ export function chatgptContext(backup: Backup) {
     exported_at: new Date().toISOString(),
     region: backup.profile?.region ?? "JP",
     taste: backup.taste,
+    plan: backup.plan
+      .filter((p) => p.status !== "removed")
+      .map((p) => ({
+        title: p.title_key.title,
+        season: p.season_number,
+        week: p.week,
+        backup: p.is_backup,
+        state: p.status,
+        label: p.label,
+      })),
     titles: backup.titles.map((t) => ({
       title: t.title,
       media_type: t.media_type,
@@ -136,6 +150,7 @@ export function chatgptContext(backup: Backup) {
       ...(t.imdb_id ? { imdb_id: t.imdb_id } : {}),
       ...(t.tmdb_id ? { tmdb_id: t.tmdb_id } : {}),
       status: t.watch.status,
+      ...(t.watch.confirmation_needed ? { needs_confirmation: true } : {}),
       rating: t.watch.rating,
       ...(t.watch.notes ? { notes: t.watch.notes } : {}),
       ...(t.watch.favorite ? { favorite: true } : {}),
@@ -147,6 +162,7 @@ export function chatgptContext(backup: Backup) {
               status: s.status,
               rating: s.rating,
               rank: s.rank,
+              ...(s.confirmation_needed ? { needs_confirmation: true } : {}),
               ...(s.notes ? { notes: s.notes } : {}),
               ...(s.completed_on ? { completed_on: s.completed_on } : {}),
             })),

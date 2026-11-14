@@ -1,4 +1,5 @@
 "use client";
+import { Artwork } from "./artwork";
 import { useState, useTransition } from "react";
 import { previewPack, confirmPack } from "@/app/bridge-actions";
 import {
@@ -6,7 +7,11 @@ import {
   type PackMatch,
 } from "@/lib/recommendation-pack";
 import { priorityLabel } from "@/lib/priority";
-export function PackImporter() {
+export function PackImporter({
+  mode = "advanced",
+}: {
+  mode?: "advanced" | "wizard";
+}) {
   const [text, setText] = useState(""),
     [matches, setMatches] = useState<PackMatch[] | null>(null),
     [choices, setChoices] = useState<Record<string, string>>({}),
@@ -25,17 +30,26 @@ export function PackImporter() {
     : null;
   return (
     <div className="pack-importer">
+      {mode === "wizard" && (
+        <ol className="wizard-steps">
+          <li>Choose file</li>
+          <li>Review titles & evidence</li>
+          <li>Confirm</li>
+        </ol>
+      )}
+      {mode === "advanced" && (
+        <label className="field">
+          <span>Recommendation Pack JSON</span>
+          <textarea
+            rows={9}
+            value={text}
+            onChange={(e) => change(e.target.value)}
+            placeholder='{"schema_version":1,"generated_at":"…","recommendations":[…]}'
+          />
+        </label>
+      )}
       <label className="field">
-        <span>Recommendation Pack JSON</span>
-        <textarea
-          rows={9}
-          value={text}
-          onChange={(e) => change(e.target.value)}
-          placeholder='{"schema_version":1,"generated_at":"…","recommendations":[…]}'
-        />
-      </label>
-      <label className="field">
-        <span>Or upload a JSON file · maximum 2 MB</span>
+        <span>Choose the structured shortlist file · maximum 2 MB</span>
         <input
           type="file"
           accept=".json,application/json"
@@ -94,6 +108,17 @@ export function PackImporter() {
             const r = pack.data.recommendations[i];
             return (
               <article key={i} className="preview-row">
+                {m.candidates.find((c) => c.id === m.target)?.poster_path && (
+                  <div className="preview-poster">
+                    <Artwork
+                      path={
+                        m.candidates.find((c) => c.id === m.target)?.poster_path
+                      }
+                      title={r.title}
+                    />
+                  </div>
+                )}
+
                 <div className="section-heading">
                   <h3>
                     {r.title}{" "}

@@ -15,6 +15,11 @@ export default async function Settings() {
           </p>
         </div>
       </div>
+      <p>
+        <Link className="button" href="/taste">
+          Your taste & preferences ↗
+        </Link>
+      </p>
       <div className="settings-shortcuts">
         <Link className="panel" href="/settings/sync">
           <p className="eyebrow gold">FRIDAY PICKS</p>

@@ -31,6 +31,7 @@ const tables = [
   "recommendations",
   "taste_signals",
   "profiles",
+  "plan_items",
 ];
 for (const table of tables) {
   const unauth = await anon.from(table).select("*");
@@ -95,10 +96,12 @@ const exportB = await b.rpc("export_library");
 assert.equal(exportB.error, null);
 assert.ok(exportB.data.titles.every((t) => !titles.some((a) => a.id === t.id)));
 console.log(
-  "Hosted Auth + REST/RLS verified: 8 tables deny anonymous reads and cross-user reads/deletes; forged ownership, reassignment, cross-owner relations, and anonymous RPCs denied.",
+  "Hosted Auth + REST/RLS verified: 9 tables deny anonymous reads and cross-user reads/deletes; forged ownership, reassignment, cross-owner relations, and anonymous RPCs denied.",
 );
 
 for (const [fn, args] of [
+  ["audit_status", { p_title_id: titleId, p_status: "watched" }],
+  ["edit_plan", { p_action: "add", p_title_id: titleId, p_week: 1 }],
   [
     "apply_title_metadata",
     { p_title_id: titleId, payload: { metadata: { state: "matched" } } },
@@ -128,5 +131,5 @@ for (const [fn, args] of [
   assert.ok((await b.rpc(fn, args)).error, `Foreign ${fn} must fail`);
 }
 console.log(
-  "V2.1 invoker RPCs deny anonymous and cross-account metadata refresh, inbox actions and pack matching.",
+  "V2.2 invoker RPCs deny anonymous and cross-account metadata refresh, inbox actions and pack matching.",
 );

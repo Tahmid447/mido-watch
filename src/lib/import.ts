@@ -79,6 +79,8 @@ export function parseImport(input: unknown, knownSeed = false): Backup {
           rating: null,
           notes: row.note ?? "",
           completed_on: null,
+          confirmation_needed: false,
+          confirmed_at: null,
           rank:
             isReacher && number <= 3
               ? ({ 1: 2, 2: 1, 3: 3 }[number] ?? null)
@@ -107,6 +109,7 @@ export function parseImport(input: unknown, knownSeed = false): Backup {
       if (value && value !== "—")
         current.reviews.push({
           source: source!,
+          category: "unknown",
           origin: "manual",
           evidence_key: null,
           score: value,

@@ -8,12 +8,15 @@ import {
   SlidersHorizontal,
   Settings,
   Clapperboard,
+  ListChecks,
+  CalendarDays,
 } from "lucide-react";
 const links = [
   ["/", "Tonight", House],
+  ["/audit", "Watch Audit", ListChecks],
+  ["/plan", "Plan", CalendarDays],
   ["/library", "Library", Library],
   ["/recommendations", "Picks", Sparkles],
-  ["/taste", "Your taste", SlidersHorizontal],
   ["/settings", "Settings", Settings],
 ] as const;
 export function Navigation() {

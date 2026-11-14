@@ -3,7 +3,13 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient, configured } from "./supabase/server";
-import { titleSchema, profileSchema, tasteSchema, type Title } from "./model";
+import {
+  titleSchema,
+  profileSchema,
+  tasteSchema,
+  type Title,
+  planItemSchema,
+} from "./model";
 export const session = cache(async function session() {
   if (!configured()) redirect("/login");
   const db = await createClient();
@@ -94,4 +100,23 @@ export async function upcoming() {
   });
   if (error) throw new Error(error.message);
   return data;
+}
+
+export const allTitles = cache(async function allTitles() {
+  const { db } = await session();
+  const { data, error } = await db.rpc("export_library");
+  if (error) throw new Error("Your collection could not be loaded.");
+  return z.object({ titles: z.array(documentSchema) }).parse(data).titles;
+});
+export async function watchPlan() {
+  const { db } = await session();
+  const { data, error } = await db
+    .from("plan_items")
+    .select("*")
+    .order("position");
+  if (error)
+    throw new Error(
+      "Your plan could not be loaded. Check that the latest app migration is applied.",
+    );
+  return z.array(planItemSchema).parse(data);
 }

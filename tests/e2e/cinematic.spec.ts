@@ -140,6 +140,7 @@ test("cinematic artwork, private trailers, provider attribution and mobile layou
   }
   await page.goto(`/titles/${id}`);
   await page.screenshot({
+    caret: "initial",
     path: `test-results/cinematic-${info.project.name}.png`,
     fullPage: true,
   });

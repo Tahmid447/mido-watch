@@ -9,14 +9,20 @@ test("logged-out pages never expose private records", async ({
   page,
   request,
 }) => {
-  await page.goto("/library");
-  await expect(page).toHaveURL(/\/login/);
+  for (const route of ["/library", "/audit", "/plan"]) {
+    await page.goto(route);
+    await expect(page).toHaveURL(/\/login/);
+  }
   await expect(page.getByText("Maharaja")).toHaveCount(0);
   const context = await request.get("/api/export/chatgpt");
   expect([401, 503]).toContain(context.status());
   const response = await request.get("/api/export");
   expect([401, 503]).toContain(response.status());
-  await page.screenshot({ path: "test-results/login.png", fullPage: true });
+  await page.screenshot({
+    caret: "initial",
+    path: "test-results/login.png",
+    fullPage: true,
+  });
 });
 test("complete personal watch workflow", async ({ page }, testInfo) => {
   test.skip(
@@ -45,6 +51,7 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
     ),
   ).toBe(true);
   await page.screenshot({
+    caret: "initial",
     path: `test-results/dashboard-${testInfo.project.name}.png`,
     fullPage: true,
   });
@@ -126,6 +133,7 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
   await review.getByRole("button", { name: "Save changes" }).click();
   await expect(review.getByRole("status")).toHaveText("Saved.");
   await page.screenshot({
+    caret: "initial",
     path: `test-results/detail-${testInfo.project.name}.png`,
     fullPage: false,
   });
@@ -148,6 +156,7 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
       },
     ],
   };
+  await page.locator(".sync-advanced > summary").click();
   await page
     .getByLabel("Recommendation Pack JSON", { exact: true })
     .fill(JSON.stringify(pack));
@@ -180,7 +189,7 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
   await expect(page.locator(".title-card")).toHaveCount(1);
   await page.goto("/settings/sync");
   const contextDownload = page.waitForEvent("download");
-  await page.getByRole("link", { name: "Export for ChatGPT" }).click();
+  await page.getByRole("link", { name: "Download context" }).click();
   const contextPath = await (await contextDownload).path();
   const context = JSON.parse(readFileSync(contextPath!, "utf8"));
   expect(context.schema_version).toBe(1);
@@ -192,6 +201,7 @@ test("complete personal watch workflow", async ({ page }, testInfo) => {
   ).toBe(true);
   expect(JSON.stringify(context)).not.toContain("user_id");
   await page.screenshot({
+    caret: "initial",
     path: `test-results/sync-${testInfo.project.name}.png`,
     fullPage: true,
   });

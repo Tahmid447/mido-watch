@@ -67,7 +67,12 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
         completed_on: nullable(f, "completed_on"),
         favorite: f.has("favorite"),
       });
-      const { in_library: _membership, ...journal } = value;
+      const {
+        in_library: _membership,
+        confirmation_needed: _confirmation,
+        confirmed_at: _confirmedAt,
+        ...journal
+      } = value;
       const r = await db
         .from("watch_entries")
         .update(journal)
@@ -85,7 +90,12 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
       check(
         await db
           .from("watch_entries")
-          .update({ status, in_library: true })
+          .update({
+            status,
+            in_library: true,
+            confirmation_needed: false,
+            confirmed_at: new Date().toISOString(),
+          })
           .eq("user_id", user.id)
           .eq("title_id", id)
           .select("title_id")
@@ -112,7 +122,7 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
         }),
       );
     } else if (action === "season") {
-      const value = seasonSchema.parse({
+      const parsedSeason = seasonSchema.parse({
         number: Number(str(f, "number")),
         status: str(f, "status"),
         rating: num(f, "rating"),
@@ -120,6 +130,11 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
         rank: num(f, "rank"),
         completed_on: nullable(f, "completed_on"),
       });
+      const {
+        confirmation_needed: _seasonConfirmation,
+        confirmed_at: _seasonConfirmedAt,
+        ...value
+      } = parsedSeason;
       const { data, error } = await db
         .from("titles")
         .select("media_type")
@@ -272,6 +287,7 @@ export async function mutate(_: Result, f: FormData): Promise<Result> {
     } else if (action === "review") {
       const value = reviewSchema.parse({
         source: str(f, "source"),
+        category: str(f, "category") || "unknown",
         score: nullable(f, "score"),
         score_type: str(f, "score_type"),
         critic_score: nullable(f, "critic_score"),

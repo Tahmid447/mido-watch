@@ -1,6 +1,7 @@
+import { TonightChooser } from "@/components/tonight-chooser";
 import Link from "next/link";
 import { ArrowRight, Film, Bookmark, Check, Play } from "lucide-react";
-import { library, profile, upcoming, taste } from "@/lib/data";
+import { library, profile, upcoming, taste, allTitles } from "@/lib/data";
 import { TitleGrid } from "@/components/title-card";
 import { Artwork } from "@/components/artwork";
 import { Trailer } from "@/components/trailer";
@@ -15,6 +16,7 @@ export default async function Home() {
     recommended,
     releases,
     signals,
+    catalog,
   ] = await Promise.all([
     profile(),
     library({ limit: "1" }),
@@ -24,11 +26,8 @@ export default async function Home() {
     library({ recommended: "true", rec_state: "new", limit: "4" }),
     upcoming(),
     taste(),
+    allTitles(),
   ]);
-  const feature =
-    recommended.titles.find(
-      (t) => !["watched", "skip", "watching"].includes(t.watch.status),
-    ) ?? interested.titles[0];
   return (
     <>
       <div className="page-heading">
@@ -41,56 +40,17 @@ export default async function Home() {
             Welcome back, {p.display_name}. A few stories worth getting lost in.
           </p>
         </div>
-        <span className="edition">THE COLLECTION / VOL. 02.1</span>
+        <span className="edition">THE COLLECTION / VOL. 02.2</span>
       </div>
-      <section className={`cinema-hero ${feature ? "" : "empty-hero"}`}>
-        {feature && (
-          <div className="hero-background">
-            <Artwork
-              path={
-                feature.metadata.backdrop_path || feature.metadata.poster_path
-              }
-              url={feature.poster_url}
-              title={feature.title}
-              backdrop
-              eager
-            />
-          </div>
-        )}
-        <div className="cinema-hero-copy">
-          <p className="eyebrow gold">
-            {feature ? "BEST PICK FOR TONIGHT" : "A NEW CHAPTER"}
-          </p>
-          <h2>{feature?.title ?? "Your next favorite starts here."}</h2>
-          <div className="feature-meta">
-            {feature &&
-              `${feature.media_type} · ${feature.release_year ?? ""} · ${feature.country} · ${priorityLabel(feature.recommendation?.priority ?? feature.watch.priority)}`}
-          </div>
-          <p>
-            {feature?.recommendation?.reason ||
-              feature?.watch.notes ||
-              feature?.synopsis ||
-              "Bring your watch history together and make room for a great story."}
-          </p>
-          <div className="hero-actions">
-            {feature ? (
-              <>
-                <Link href={`/titles/${feature.id}`} className="button primary">
-                  <Play size={16} /> Explore this title
-                </Link>
-                <Trailer
-                  trailer={feature.metadata.trailer}
-                  title={feature.title}
-                />
-              </>
-            ) : (
-              <Link href="/settings" className="button primary">
-                Import your V1 collection <ArrowRight size={16} />
-              </Link>
-            )}
-          </div>
-        </div>
-      </section>
+      <TonightChooser titles={catalog} taste={signals} region={p.region} />
+      <div className="home-links">
+        <Link className="button" href="/audit">
+          Watch Audit ↗
+        </Link>
+        <Link className="button" href="/plan">
+          My 30-Day Plan ↗
+        </Link>
+      </div>
       <div className="stats">
         {[
           [Film, all.total, "In your library"],

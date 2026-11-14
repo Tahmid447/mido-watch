@@ -82,6 +82,60 @@ export type Database = {
           },
         ]
       }
+      plan_items: {
+        Row: {
+          id: string
+          is_backup: boolean
+          label: string
+          position: number
+          season_number: number | null
+          status: string
+          title_id: string
+          updated_at: string
+          user_id: string
+          week: number | null
+        }
+        Insert: {
+          id?: string
+          is_backup?: boolean
+          label?: string
+          position: number
+          season_number?: number | null
+          status?: string
+          title_id: string
+          updated_at?: string
+          user_id?: string
+          week?: number | null
+        }
+        Update: {
+          id?: string
+          is_backup?: boolean
+          label?: string
+          position?: number
+          season_number?: number | null
+          status?: string
+          title_id?: string
+          updated_at?: string
+          user_id?: string
+          week?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_items_user_id_title_id_fkey"
+            columns: ["user_id", "title_id"]
+            isOneToOne: false
+            referencedRelation: "titles"
+            referencedColumns: ["user_id", "id"]
+          },
+          {
+            foreignKeyName: "plan_items_user_id_title_id_season_number_fkey"
+            columns: ["user_id", "title_id", "season_number"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["user_id", "title_id", "number"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           display_name: string
@@ -169,6 +223,7 @@ export type Database = {
         Row: {
           audience_score: string | null
           captured_on: string | null
+          category: string
           critic_score: string | null
           evidence_key: string | null
           id: string
@@ -187,6 +242,7 @@ export type Database = {
         Insert: {
           audience_score?: string | null
           captured_on?: string | null
+          category?: string
           critic_score?: string | null
           evidence_key?: string | null
           id?: string
@@ -205,6 +261,7 @@ export type Database = {
         Update: {
           audience_score?: string | null
           captured_on?: string | null
+          category?: string
           critic_score?: string | null
           evidence_key?: string | null
           id?: string
@@ -233,6 +290,8 @@ export type Database = {
       seasons: {
         Row: {
           completed_on: string | null
+          confirmation_needed: boolean
+          confirmed_at: string | null
           notes: string
           number: number
           rank: number | null
@@ -244,6 +303,8 @@ export type Database = {
         }
         Insert: {
           completed_on?: string | null
+          confirmation_needed?: boolean
+          confirmed_at?: string | null
           notes?: string
           number: number
           rank?: number | null
@@ -255,6 +316,8 @@ export type Database = {
         }
         Update: {
           completed_on?: string | null
+          confirmation_needed?: boolean
+          confirmed_at?: string | null
           notes?: string
           number?: number
           rank?: number | null
@@ -358,6 +421,8 @@ export type Database = {
       watch_entries: {
         Row: {
           completed_on: string | null
+          confirmation_needed: boolean
+          confirmed_at: string | null
           favorite: boolean
           in_library: boolean
           notes: string
@@ -371,6 +436,8 @@ export type Database = {
         }
         Insert: {
           completed_on?: string | null
+          confirmation_needed?: boolean
+          confirmed_at?: string | null
           favorite?: boolean
           in_library?: boolean
           notes?: string
@@ -384,6 +451,8 @@ export type Database = {
         }
         Update: {
           completed_on?: string | null
+          confirmation_needed?: boolean
+          confirmed_at?: string | null
           favorite?: boolean
           in_library?: boolean
           notes?: string
@@ -416,6 +485,28 @@ export type Database = {
       }
       apply_title_metadata: {
         Args: { p_title_id: string; payload: Json }
+        Returns: undefined
+      }
+      audit_status: {
+        Args: {
+          p_expected?: string
+          p_season?: number
+          p_status: string
+          p_title_id: string
+        }
+        Returns: undefined
+      }
+      edit_plan: {
+        Args: {
+          p_action: string
+          p_expected?: string
+          p_item_id?: string
+          p_journal_expected?: string
+          p_label?: string
+          p_season_number?: number
+          p_title_id?: string
+          p_week?: number
+        }
         Returns: undefined
       }
       export_library: { Args: never; Returns: Json }

@@ -203,7 +203,29 @@ export function EvidenceEditors({ t }: { t: Title }) {
         <summary>Add external review evidence</summary>
         <ActionForm action="review" titleId={t.id}>
           <div className="form-grid">
-            <Field label="Source / reviewer" name="source" required />
+            <Field
+              label="Source / reviewer"
+              name="source"
+              required
+              list="review-source-options"
+              placeholder="IMDb, Filmi Indian, a publication…"
+            />
+            <datalist id="review-source-options">
+              <option value="IMDb" />
+              <option value="Rotten Tomatoes critics" />
+              <option value="Rotten Tomatoes audience" />
+              <option value="Metacritic" />
+              <option value="Filmi Indian" />
+            </datalist>
+            <label className="field">
+              <span>Review category</span>
+              <select name="category" defaultValue="unknown">
+                <option value="unknown">Choose if known</option>
+                <option value="audience">Audience rating</option>
+                <option value="critic">Professional critic rating</option>
+                <option value="reviewer">Individual reviewer opinion</option>
+              </select>
+            </label>
             <Field label="Score · as published" name="score" />
             <Field
               label="Score type"
@@ -222,7 +244,10 @@ export function EvidenceEditors({ t }: { t: Title }) {
             <Field label="Captured on" name="captured_on" type="date" />
             <Field label="Source URL" name="source_url" type="url" />
           </div>
-          <TextArea label="Evidence notes" name="notes" />
+          <TextArea
+            label="Evidence notes · short reviewer summary"
+            name="notes"
+          />
           <label className="check">
             <input type="checkbox" name="verified" /> Verified against the
             linked source
